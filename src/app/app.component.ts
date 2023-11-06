@@ -7,8 +7,6 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'angular-chess';
-
   constructor(private modalService: NgbModal) {}
 
   public open(modal: any): void {
