@@ -1,0 +1,24 @@
+<div class="boardContainer container-fluid p-3 d-flex justify-content-center align-items-center">
+    <div class="boardLayout">
+        <table class="board">
+            <tr>
+                <th></th>
+                <th>a</th>
+                <th>b</th>
+                <th>c</th>
+                <th>d</th>
+                <th>e</th>
+                <th>f</th>
+                <th>g</th>
+                <th>h</th>
+            </tr>
+
+            <tr *ngFor="let row of board; index as i">
+                <th>{{8-i}}</th>
+                <td *ngFor="let piece of row">
+                    <img *ngIf="piece" src="{{piece.getSVGUrl()}}" (click)="piece.onClick()" style="width: 100%;">
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
