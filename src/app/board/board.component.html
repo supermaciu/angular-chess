@@ -15,8 +15,8 @@
 
             <tr *ngFor="let row of board; index as i">
                 <th>{{8-i}}</th>
-                <td *ngFor="let piece of row">
-                    <img *ngIf="piece" src="{{piece.getSVGUrl()}}" (click)="piece.onClick()" style="width: 100%;">
+                <td *ngFor="let piece of row" (click)="getPos()">
+                    <img class="piece" *ngIf="piece" src="{{piece.getSVGUrl()}}">
                 </td>
             </tr>
         </table>

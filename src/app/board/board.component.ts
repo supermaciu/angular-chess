@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 
-import { Piece } from '../piece';
+import { Piece, PieceColor, PieceType } from '../piece';
 
 @Component({
   selector: 'app-board',
@@ -9,43 +9,32 @@ import { Piece } from '../piece';
 })
 export class BoardComponent implements OnInit {
   board: Piece[][] = new Array(8).fill(undefined)
-                                 .map(() =>
-                                  new Array(8).fill(undefined)
-                                 );
+    .map(() =>
+      new Array(8).fill(undefined)
+    );
+
+
+  resetBoard(): void {
+    this.board[0][0] = new Piece(PieceColor.WHITE, PieceType.PAWN);
+    this.board[1][0] = new Piece(PieceColor.WHITE, PieceType.KNIGHT);
+    this.board[2][0] = new Piece(PieceColor.WHITE, PieceType.BISHOP);
+    this.board[3][0] = new Piece(PieceColor.WHITE, PieceType.ROOK);
+    this.board[4][0] = new Piece(PieceColor.WHITE, PieceType.QUEEN);
+    this.board[5][0] = new Piece(PieceColor.WHITE, PieceType.KING);
+
+    this.board[0][1] = new Piece(PieceColor.BLACK, PieceType.PAWN);
+    this.board[1][1] = new Piece(PieceColor.BLACK, PieceType.KNIGHT);
+    this.board[2][1] = new Piece(PieceColor.BLACK, PieceType.BISHOP);
+    this.board[3][1] = new Piece(PieceColor.BLACK, PieceType.ROOK);
+    this.board[4][1] = new Piece(PieceColor.BLACK, PieceType.QUEEN);
+    this.board[5][1] = new Piece(PieceColor.BLACK, PieceType.KING);
+  }
 
   ngOnInit(): void {
-    for (let i = 0; i < this.board.length; i++) {
-      for (let j = 0; j < this.board[i].length; j++) {
-        if (i == 0) {
-          if (j == 0 || j == this.board.length-1) {
-            this.board[i][j] = new Piece("rook", "b");
-          } else if (j == 1 || j == this.board.length-2) {
-            this.board[i][j] = new Piece("knight", "b");
-          } else if (j == 2 || j == this.board.length-3) {
-            this.board[i][j] = new Piece("bishop", "b");
-          } else if (j == 3) {
-            this.board[i][j] = new Piece("queen", "b");
-          } else if (j == 4) {
-            this.board[i][j] = new Piece("king", "b");
-          }
-        } else if (i == 1) {
-          this.board[i][j] = new Piece("pawn", "b");
-        } else if (i == this.board.length-2) {
-          this.board[i][j] = new Piece("pawn", "w");
-        } else if (i == this.board.length-1) {
-          if (j == 0 || j == this.board.length-1) {
-            this.board[i][j] = new Piece("rook", "w");
-          } else if (j == 1 || j == this.board.length-2) {
-            this.board[i][j] = new Piece("knight", "w");
-          } else if (j == 2 || j == this.board.length-3) {
-            this.board[i][j] = new Piece("bishop", "w");
-          } else if (j == 3) {
-            this.board[i][j] = new Piece("queen", "w");
-          } else if (j == 4) {
-            this.board[i][j] = new Piece("king", "w");
-          }
-        }
-      }
-    }
+    this.resetBoard();
+  }
+
+  getPos() {
+    console.log("pos");
   }
 }
