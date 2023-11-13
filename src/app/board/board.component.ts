@@ -63,14 +63,14 @@ export class BoardComponent implements OnInit {
     if (this.selectedPiece === 0b00000) {
       this.selectedPiece = id;
       this.board[y][x] = 0b00000;
-      console.log(`Selected ${this.selectedPiece} piece from ${this.getBoardCoordinate(y, x)} (${x}, ${y})`);
+      console.log(`Selected ${(this.selectedPiece >>> 0).toString(2)} piece from ${this.getBoardCoordinate(y, x)} (${x}, ${y})`);
     }
   }
 
   placeSelectedPiece(y: number, x: number) {
     if (this.board[y][x] === 0b00000 && this.selectedPiece !== 0b00000) {
       this.board[y][x] = this.selectedPiece;
-      console.log(`Placed ${this.selectedPiece} piece to ${this.getBoardCoordinate(y, x)} (${x}, ${y})`);
+      console.log(`Placed ${(this.selectedPiece >>> 0).toString(2)} piece to ${this.getBoardCoordinate(y, x)} (${x}, ${y})`);
       this.selectedPiece = 0b00000;
     }
   }
