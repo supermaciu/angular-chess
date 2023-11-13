@@ -23,11 +23,17 @@
 }
 
 .piece {
-    width: 100%;
+    width: 100px; height: 100px;
     
     -webkit-user-drag: none;
     user-select: none;
     -moz-user-select: none;
     -webkit-user-select: none;
     -ms-user-select: none;
+}
+
+.selectedPiece {
+    width: 100px; height: 100px;
+    position: absolute;
+    pointer-events: none;
 }
