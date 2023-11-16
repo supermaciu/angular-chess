@@ -1,0 +1,25 @@
+Na każdym etapie ma być realizowana dokumentacja zawierająca zrzuty ekranów, kody programów. Opisy kodów: funkcji, komunikacji pomiędzy modułami itp. 
+
+Etap I – do 31.10 
+
+Analiza i opracowanie algorytmów i mechaniki gry 
+
+Etap II – do 2.11 
+
+Komunikacja z użytkownikiem – określenie sposobu komunikacji, zdefiniowanie zasad komunikacji z użytkownikiem 
+
+Etap III – do 20.11 
+
+Przeniesienie mechaniki gry i algorytmów do programu. Realizacja komunikacji z użytkownikiem 
+
+Etap IV – do 27.11 
+
+Połączenie wszystkich elementów gry 
+
+Etap V – do 30.11 
+
+Weryfikacja i testowanie programu – wybrać testera i określić zasady testowania. Dokonanie poprawek w przypadku wykrycia błędów w procesie testowania. 
+
+Etap VI – do 07.12 
+
+Utworzenie instrukcji dla użytkownika i przygotowanie dokumentacji technicznej projektu

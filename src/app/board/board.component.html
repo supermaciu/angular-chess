@@ -1,5 +1,5 @@
 <div class="boardContainer container-fluid p-3 d-flex justify-content-center align-items-center">
-    <div class="boardLayout">
+    <div class="boardLayout" [class.grabbing]="selectedPiece">
         <table class="board" (mousemove)="getMouseCoordinates($event)">
             <tr>
                 <th></th>

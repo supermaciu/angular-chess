@@ -1,0 +1,2 @@
+Komunikacja z użytkownikiem za pomocą myszki i elementów na ekranie (figurami).
+Figury można przenościć klikając na nie, żeby je wybrać i kliknąć ponownie, żeby je postawić jeżeli na danym polu nie ma żadnej figury.

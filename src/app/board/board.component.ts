@@ -30,23 +30,39 @@ export class BoardComponent implements OnInit {
   //       8          16             1           2             3             4           5            6
   // 0b - 01 (white), 10 (black) - 001 (pawn), 010 (knight), 011 (bishop), 100 (rook), 101 (queen), 110 (king)
 
-  resetBoard(): void {
-    let piece = 0b01001;
-    for (let i = 0; i < 2; i++) {
-      for (let j = 0; j < 6; j++) {
-        this.board[i][j] = piece;
-        piece += 1;
-      }
-
-      piece = 0b10001;
-    }
-  }
-
-  ngOnInit(): void {
+  ngOnInit() {
     this.resetBoard();
   }
 
-  getPieceSVGUrl(id: number) {
+  resetBoard() {
+    this.board[0][0] = 0b10100;
+    this.board[0][1] = 0b10010;
+    this.board[0][2] = 0b10011;
+    this.board[0][3] = 0b10101;
+    this.board[0][4] = 0b10110;
+    this.board[0][5] = 0b10011;
+    this.board[0][6] = 0b10010;
+    this.board[0][7] = 0b10100;
+
+    for (let i = 0; i < 8; i++) {
+      this.board[1][i] = 0b10001;
+    }
+
+    for (let i = 0; i < 8; i++) {
+      this.board[6][i] = 0b01001;
+    }
+
+    this.board[7][0] = 0b01100;
+    this.board[7][1] = 0b01010;
+    this.board[7][2] = 0b01011;
+    this.board[7][3] = 0b01101;
+    this.board[7][4] = 0b01110;
+    this.board[7][5] = 0b01011;
+    this.board[7][6] = 0b01010;
+    this.board[7][7] = 0b01100;
+  }
+
+  getPieceSVGUrl(id: number): string {
     return `../../assets/pieces/bitwise/${id}.svg`;
   }
 
@@ -55,7 +71,7 @@ export class BoardComponent implements OnInit {
     this.mouseTop = event.clientY - 50;
   }
 
-  getBoardCoordinate(y: number, x: number) {
+  getBoardCoordinate(y: number, x: number): string {
     return this.boardCoordinates[y][x];
   }
 
@@ -63,14 +79,17 @@ export class BoardComponent implements OnInit {
     if (this.selectedPiece === 0b00000) {
       this.selectedPiece = id;
       this.board[y][x] = 0b00000;
-      console.log(`Selected 0b${(this.selectedPiece >>> 0).toString(2)} piece from ${this.getBoardCoordinate(y, x)} (${x}, ${y})`);
+
+      console.log(`Selected ${(this.selectedPiece >>> 0).toString(2)} (ID=${this.selectedPiece}) piece from ${this.getBoardCoordinate(y, x)} (${x}, ${y})`);
     }
   }
 
   placeSelectedPiece(y: number, x: number) {
     if (this.board[y][x] === 0b00000 && this.selectedPiece !== 0b00000) {
       this.board[y][x] = this.selectedPiece;
-      console.log(`Placed 0b${(this.selectedPiece >>> 0).toString(2)} piece to ${this.getBoardCoordinate(y, x)} (${x}, ${y})`);
+
+      console.log(`Placed ${(this.selectedPiece >>> 0).toString(2)} (ID=${this.selectedPiece}) piece to ${this.getBoardCoordinate(y, x)} (${x}, ${y})`);
+      
       this.selectedPiece = 0b00000;
     }
   }

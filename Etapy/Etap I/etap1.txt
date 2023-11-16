@@ -1,0 +1,1 @@
+Szachy – strategiczna gra planszowa rozgrywana przez dwóch graczy na 64-polowej szachownicy, za pomocą zestawu bierek (pionów i figur). Popularnie, choć nieprecyzyjnie, szachami nazywa się również wspomniane bierki.
