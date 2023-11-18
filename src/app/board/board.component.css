@@ -13,6 +13,7 @@
 .board {
     border-spacing: 0; border-collapse: collapse;
 }
+
 .board th {
     padding: .5em; text-align: center;
 
@@ -25,6 +26,20 @@
 .board td {
     /* border: 1px solid; */
     width: 100px; height: 100px;
+}
+
+.board .highlight {
+    content: "";
+    display: block;
+
+    position: absolute;
+    transform: translateY(-100%);
+
+    width: 100px; height: 100px;
+    background-color: red;
+    opacity: 0.5;
+    z-index: 100;
+    pointer-events: none;
 }
 
 .board tr:nth-child(2n) td:nth-child(2n+1) {
@@ -50,6 +65,16 @@
     -ms-user-select: none;
 
     cursor: grab;
+}
+
+.piecePlaceholder {
+    width: 100px; height: 100px;
+    
+    -webkit-user-drag: none;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }
 
 .selectedPiece {

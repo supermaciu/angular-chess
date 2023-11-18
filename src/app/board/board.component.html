@@ -17,6 +17,8 @@
                 <th>{{8-y}}</th>
                 <td id="{{getBoardCoordinate(y, x)}}" *ngFor="let piece of row; index as x" (click)="placeSelectedPiece(y, x)">
                     <img class="piece" *ngIf="piece !== 0" src="{{getPieceSVGUrl(piece)}}" (click)="selectPiece(piece, y, x)">
+                    <div class="piecePlaceholder" *ngIf="piece === 0"></div>
+                    <div class="highlight"></div>
                 </td>
             </tr>
 

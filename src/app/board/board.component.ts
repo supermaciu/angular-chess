@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Piece } from '../piece';
 
 @Component({
   selector: 'app-board',
