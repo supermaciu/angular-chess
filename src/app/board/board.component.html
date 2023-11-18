@@ -15,14 +15,14 @@
 
             <tr *ngFor="let row of board; index as y">
                 <th>{{8-y}}</th>
-                <td id="{{getBoardCoordinate(y, x)}}" *ngFor="let piece of row; index as x" (click)="placeSelectedPiece(y, x)">
-                    <img class="piece" *ngIf="piece !== 0" src="{{getPieceSVGUrl(piece)}}" (click)="selectPiece(piece, y, x)">
-                    <div class="piecePlaceholder" *ngIf="piece === 0"></div>
-                    <div class="highlight"></div>
+                <td *ngFor="let tile of row" (mouseover)="test(tile)">
+                    <img class="piece" *ngIf="tile.piece !== undefined" src="{{tile.piece!.getUrl()}}" (click)="selectPiece(tile)">
+                    <div class="pieceEmpty" *ngIf="tile.piece === undefined" (click)="placeSelectedPiece(tile)"></div>
+                    <div class="highlight" *ngIf="tile.highlighted" [style.backgroundColor]="tile.highlightColor"></div>
                 </td>
             </tr>
 
-            <img class="selectedPiece" *ngIf="selectedPiece" src="{{getPieceSVGUrl(selectedPiece)}}" [style.left.px]="mouseLeft" [style.top.px]="mouseTop">
+            <img class="selectedPiece" *ngIf="selectedPiece" src="{{selectedPiece.getUrl()}}" [style.left.px]="mouseLeft" [style.top.px]="mouseTop">
         </table>
     </div>
 </div>
