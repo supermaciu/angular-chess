@@ -13,11 +13,14 @@ PIECETYPES[0b00110] = "king";
 export class Piece {
     id: number;
 
+    touched: boolean = false; // for pawn first move checking
+
     constructor(id: number) {
         this.id = id;
     }
 
     getUrl() {
         return `../assets/pieces/bitwise/${this.id}.svg`;
+        // return `../assets/pieces/literal/${PIECETYPES[this.id & 0b00111]}-${PIECECOLORS[this.id & 0b11000][0]}.svg`;
     }
 }

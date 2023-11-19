@@ -16,15 +16,16 @@ export class Tile {
     y: number;
     coordinate: string;
 
-    piece: Piece | undefined = undefined;
+    piece?: Piece | undefined = undefined;
 
-    highlightColor: string = "red";
+    static defaultHighlightColor: string = "yellow";
+    highlightColor: string =  Tile.defaultHighlightColor;
     highlighted: boolean = false;
 
     constructor(x: number, y: number) {
         this.x = x;
         this.y = y;
-        this.coordinate = BOARDCOORDINATES[x][y];
+        this.coordinate = BOARDCOORDINATES[y][x];
     }
 
     setPiece(piece: Piece) {

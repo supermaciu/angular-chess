@@ -15,7 +15,7 @@
 
             <tr *ngFor="let row of board; index as y">
                 <th>{{8-y}}</th>
-                <td *ngFor="let tile of row" (mouseover)="test(tile)">
+                <td *ngFor="let tile of row" (click)="attackPiece(tile)">
                     <img class="piece" *ngIf="tile.piece !== undefined" src="{{tile.piece!.getUrl()}}" (click)="selectPiece(tile)">
                     <div class="pieceEmpty" *ngIf="tile.piece === undefined" (click)="placeSelectedPiece(tile)"></div>
                     <div class="highlight" *ngIf="tile.highlighted" [style.backgroundColor]="tile.highlightColor"></div>
