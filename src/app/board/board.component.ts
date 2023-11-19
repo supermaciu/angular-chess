@@ -35,6 +35,12 @@ export class BoardComponent implements OnInit {
   mouseLeft!: number;
   mouseTop!: number;
 
+  // :The queen is worth 900, 1 queen = 9 pawns
+  // :Each rook is worth 500; 
+  // :Each knight is worth 300; 
+  // :Each bishop is worth 300; 
+  // :Each pawn is worth 100 centipawns.
+
   ngOnInit() {
     this.resetBoard();
 
@@ -94,12 +100,17 @@ export class BoardComponent implements OnInit {
       this.selectedPieceMove.from = clickedTile.coordinate;
 
       // legal, no collision checking moves
-      // TODO: move this to Tile class?
+      // TODO: move this to Tile class, because evaluation is being done every time piece is selected
       switch (this.selectedPiece!.id & 0b00111) { // type
         case 0b00001: { // pawn
           let delta = ((this.selectedPiece!.id & 0b11000) == 0b01000) ? -1 : 1; // depends on color
-          if (clickedTile.y+delta >= 0 && clickedTile.y+delta <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y+delta)); // TODO: promotion available?
-          if (clickedTile.y+2*delta >= 0 && clickedTile.y+2*delta <= 7 && !this.selectedPiece!.touched) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y+2*delta));
+          if (clickedTile.y+delta >= 0 && clickedTile.y+delta <= 7 && this.getTile(clickedTile.x, clickedTile.y+delta).piece === undefined) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y+delta));
+          if (clickedTile.y+2*delta >= 0 && clickedTile.y+2*delta <= 7 && !this.selectedPiece!.touched && this.getTile(clickedTile.x, clickedTile.y+delta).piece === undefined) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y+2*delta));
+
+          if (clickedTile.x-1 >= 0 && clickedTile.y+delta >= 0 && clickedTile.y+delta <= 7 && this.getTile(clickedTile.x-1, clickedTile.y+delta).piece !== undefined) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-1, clickedTile.y+delta));
+          if (clickedTile.x+1 <= 7 && clickedTile.y+delta >= 0 && clickedTile.y+delta <= 7 && this.getTile(clickedTile.x+1, clickedTile.y+delta).piece !== undefined) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y+delta));
+
+          // TODO: promotion
           break;
         }
 
@@ -121,15 +132,19 @@ export class BoardComponent implements OnInit {
         case 0b00011: { // bishop
           for (let i = 1; i <= Math.min(clickedTile.x, clickedTile.y); i++) {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-i, clickedTile.y-i));
+            if (this.getTile(clickedTile.x-i, clickedTile.y-i).piece !== undefined) break;
           }
           for (let i = 1; i <= Math.min(7 - clickedTile.x, clickedTile.y); i++) {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+i, clickedTile.y-i));
+            if (this.getTile(clickedTile.x+i, clickedTile.y-i).piece !== undefined) break;
           }
           for (let i = 1; i <= Math.min(7 - clickedTile.x, 7 - clickedTile.y); i++) {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+i, clickedTile.y+i));
+            if (this.getTile(clickedTile.x+i, clickedTile.y+i).piece !== undefined) break;
           }
           for (let i = 1; i <= Math.min(clickedTile.x, 7 - clickedTile.y); i++) {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-i, clickedTile.y+i));
+            if (this.getTile(clickedTile.x-i, clickedTile.y+i).piece !== undefined) break;
           }
           break;
         }
@@ -137,15 +152,19 @@ export class BoardComponent implements OnInit {
         case 0b00100: { // rook
           for (let i = 1; i <= clickedTile.y; i++) {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y-i));
+            if (this.getTile(clickedTile.x, clickedTile.y-i).piece !== undefined) break;
           }
           for (let i = 1; i <= 7 - clickedTile.x; i++) {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+i, clickedTile.y));
+            if (this.getTile(clickedTile.x+i, clickedTile.y).piece !== undefined) break;
           }
           for (let i = 1; i <= 7 - clickedTile.y; i++) {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y+i));
+            if (this.getTile(clickedTile.x, clickedTile.y+i).piece !== undefined) break;
           }
           for (let i = 1; i <= clickedTile.x; i++) {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-i, clickedTile.y));
+            if (this.getTile(clickedTile.x-i, clickedTile.y).piece !== undefined) break;
           }
           break;
         }
@@ -153,28 +172,36 @@ export class BoardComponent implements OnInit {
         case 0b00101: { // queen
           for (let i = 1; i <= Math.min(clickedTile.x, clickedTile.y); i++) {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-i, clickedTile.y-i));
+            if (this.getTile(clickedTile.x-i, clickedTile.y-i).piece !== undefined) break;
           }
           for (let i = 1; i <= Math.min(7 - clickedTile.x, clickedTile.y); i++) {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+i, clickedTile.y-i));
+            if (this.getTile(clickedTile.x+i, clickedTile.y-i).piece !== undefined) break;
           }
           for (let i = 1; i <= Math.min(7 - clickedTile.x, 7 - clickedTile.y); i++) {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+i, clickedTile.y+i));
+            if (this.getTile(clickedTile.x+i, clickedTile.y+i).piece !== undefined) break;
           }
           for (let i = 1; i <= Math.min(clickedTile.x, 7 - clickedTile.y); i++) {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-i, clickedTile.y+i));
+            if (this.getTile(clickedTile.x-i, clickedTile.y+i).piece !== undefined) break;
           }
 
           for (let i = 1; i <= clickedTile.y; i++) {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y-i));
+            if (this.getTile(clickedTile.x, clickedTile.y-i).piece !== undefined) break;
           }
           for (let i = 1; i <= 7 - clickedTile.x; i++) {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+i, clickedTile.y));
+            if (this.getTile(clickedTile.x+i, clickedTile.y).piece !== undefined) break;
           }
           for (let i = 1; i <= 7 - clickedTile.y; i++) {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y+i));
+            if (this.getTile(clickedTile.x, clickedTile.y+i).piece !== undefined) break;
           }
           for (let i = 1; i <= clickedTile.x; i++) {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-i, clickedTile.y));
+            if (this.getTile(clickedTile.x-i, clickedTile.y).piece !== undefined) break;
           }
           break;
         }
