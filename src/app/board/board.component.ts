@@ -17,6 +17,8 @@ export class BoardComponent implements OnInit {
     )
   );
 
+  playerTurnColor: number = 0b01000;
+
   moves: Move[] = [];
 
   selectedPiece?: Piece | undefined = undefined;
@@ -81,7 +83,7 @@ export class BoardComponent implements OnInit {
   }
 
   selectPiece(clickedTile: Tile) {
-    if (this.selectedPiece === undefined && clickedTile.piece !== undefined) {
+    if (this.selectedPiece === undefined && clickedTile.piece !== undefined && (clickedTile.piece.id & 0b11000) === this.playerTurnColor) {
       this.selectedPiece = clickedTile.piece;
       clickedTile.erasePiece();
 
@@ -216,6 +218,9 @@ export class BoardComponent implements OnInit {
 
         this.selectedPiece.touched = true;
         this.moves.push({...this.selectedPieceMove});
+
+        this.playerTurnColor = (this.playerTurnColor == 0b01000) ? 0b10000 : 0b01000;
+
         console.log(`${PIECECOLORS[(this.selectedPiece!.id & 0b11000)]} ${PIECETYPES[(this.selectedPiece!.id & 0b00111)]} ${this.selectedPieceMove.from}${this.selectedPieceMove.to} (${clickedTile.x}, ${clickedTile.y})`);
       }
 
@@ -227,11 +232,15 @@ export class BoardComponent implements OnInit {
 
   attackPiece(clickedTile: Tile) {
     // attacking, capturing
-    if (this.selectedPiece !== undefined && clickedTile.piece !== undefined && this.selectedPieceMove.from !== clickedTile.coordinate && this.selectedPieceLegalTiles.includes(clickedTile)) {
-      console.log(`${PIECECOLORS[(clickedTile.piece.id & 0b11000)]} ${PIECETYPES[(clickedTile.piece.id & 0b00111)]} attacked by ${PIECECOLORS[(this.selectedPiece.id & 0b11000)]} ${PIECETYPES[(this.selectedPiece.id & 0b00111)]} on ${BOARDCOORDINATES[clickedTile.y][clickedTile.x]} (${clickedTile.x}, ${clickedTile.y})`);
-
-      clickedTile.erasePiece();
-      this.placeSelectedPiece(clickedTile);
+    if (this.selectedPieceLegalTiles.includes(clickedTile)) {
+      if (this.selectedPiece !== undefined && clickedTile.piece !== undefined && this.selectedPieceMove.from !== clickedTile.coordinate) {
+        if ((clickedTile.piece.id & 0b11000) !== this.playerTurnColor) {
+          console.log(`${PIECECOLORS[(clickedTile.piece.id & 0b11000)]} ${PIECETYPES[(clickedTile.piece.id & 0b00111)]} attacked by ${PIECECOLORS[(this.selectedPiece.id & 0b11000)]} ${PIECETYPES[(this.selectedPiece.id & 0b00111)]} on ${BOARDCOORDINATES[clickedTile.y][clickedTile.x]} (${clickedTile.x}, ${clickedTile.y})`);
+          
+          clickedTile.erasePiece();
+          this.placeSelectedPiece(clickedTile);
+        }
+      }
     }
   }
 }

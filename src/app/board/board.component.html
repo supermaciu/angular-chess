@@ -1,4 +1,5 @@
 <div class="boardContainer container-fluid p-3 d-flex justify-content-center align-items-center">
+    <p class="playerTurn">Tura {{playerTurnColor == 8 ? "białych" : "czarnych"}}</p>
     <div class="boardLayout" [class.grabbing]="selectedPiece">
         <table class="board" (mousemove)="getMouseCoordinates($event)">
             <tr>
@@ -25,4 +26,5 @@
             <img class="selectedPiece" *ngIf="selectedPiece" src="{{selectedPiece.getUrl()}}" [style.left.px]="mouseLeft" [style.top.px]="mouseTop">
         </table>
     </div>
+    <p class="playerTurn">Tura {{playerTurnColor == 8 ? "białych" : "czarnych"}}</p>
 </div>

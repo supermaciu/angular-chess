@@ -1,3 +1,9 @@
+.playerTurn {
+    font-size: 180%;
+    font-weight: bold;
+    padding: 20px;
+}
+
 .boardLayout {
     -webkit-user-drag: none;
     user-select: none;
