@@ -28,7 +28,11 @@ export class Tile {
         this.coordinate = BOARDCOORDINATES[y][x];
     }
 
+    fnCallWhenPiecePlaced() {}
+
     setPiece(piece: Piece) {
+        this.fnCallWhenPiecePlaced();
+        this.fnCallWhenPiecePlaced = () => {};
         this.piece = piece;
     }
 

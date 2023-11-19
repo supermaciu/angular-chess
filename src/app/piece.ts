@@ -14,6 +14,7 @@ export class Piece {
     id: number;
 
     touched: boolean = false; // for pawn first move checking
+    enpassantable: boolean = false; // for pawn first move checking
 
     constructor(id: number) {
         this.id = id;

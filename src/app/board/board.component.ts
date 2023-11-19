@@ -41,6 +41,30 @@ export class BoardComponent implements OnInit {
   // :Each bishop is worth 300; 
   // :Each pawn is worth 100 centipawns.
 
+  // WIN/LOSE:
+  // Checkmate-------------------------------------------------------
+  // One of the most common ways to end a chess game is by checkmate. This happens when one of the players
+  // is threatening the other king and it cannot move to any other squares, cannot be protected by another 
+  // piece and the checking piece cannot be captured.
+
+  // If all of these conditions are met, the attacking player wins via checkmate.
+
+  // Resignation-----------------------------------
+
+  // Timeout (timer implementation) -------------------------------
+
+  // DRAW:
+  // Stalemate-----------------
+  // -king is not in check and there are no other pieces on the board
+  // -https://www.chess.com/article/view/stalemate-chess
+  // -Insufficient material
+  // -https://www.chess.com/article/view/how-chess-games-can-end-8-ways-explained
+  // -50 move rule - The 50 move-rule allows either player to claim a draw if no capture has been made or no pawn has been moved in the last 50 moves.
+  // -repetition - The threefold-repetition rule says that if a position arises three times in a game, either player can claim a draw during that position
+  // -agreement from both players
+
+  //TODO: CHECKMATE !!!!!!!!!!!!!!!!!!
+
   ngOnInit() {
     this.resetBoard();
 
@@ -100,7 +124,7 @@ export class BoardComponent implements OnInit {
       this.selectedPieceMove.from = clickedTile.coordinate;
 
       // legal, no collision checking moves
-      // TODO: move this to Tile class, because evaluation is being done every time piece is selected
+      // TODO: move this to Tile class, because evaluation is being done every time piece is selected, make a Board class to be able to import it anywhere
       switch (this.selectedPiece!.id & 0b00111) { // type
         case 0b00001: { // pawn
           let delta = ((this.selectedPiece!.id & 0b11000) == 0b01000) ? -1 : 1; // depends on color
@@ -109,6 +133,20 @@ export class BoardComponent implements OnInit {
 
           if (clickedTile.x-1 >= 0 && clickedTile.y+delta >= 0 && clickedTile.y+delta <= 7 && this.getTile(clickedTile.x-1, clickedTile.y+delta).piece !== undefined) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-1, clickedTile.y+delta));
           if (clickedTile.x+1 <= 7 && clickedTile.y+delta >= 0 && clickedTile.y+delta <= 7 && this.getTile(clickedTile.x+1, clickedTile.y+delta).piece !== undefined) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y+delta));
+
+          // en passant
+          if (clickedTile.x-1 >= 0 && this.getTile(clickedTile.x-1, clickedTile.y+delta).piece === undefined && this.getTile(clickedTile.x-1, clickedTile.y).piece !== undefined && this.getTile(clickedTile.x-1, clickedTile.y).piece!.enpassantable == true) {
+            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-1, clickedTile.y+delta));
+            this.getTile(clickedTile.x-1, clickedTile.y+delta).fnCallWhenPiecePlaced = () => {
+              this.getTile(clickedTile.x-1, clickedTile.y).erasePiece();
+            }
+          } 
+          if (clickedTile.x+1 <= 7 && this.getTile(clickedTile.x+1, clickedTile.y+delta).piece === undefined && this.getTile(clickedTile.x+1, clickedTile.y).piece !== undefined && this.getTile(clickedTile.x+1, clickedTile.y).piece!.enpassantable == true) {
+            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y+delta));
+            this.getTile(clickedTile.x+1, clickedTile.y+delta).fnCallWhenPiecePlaced = () => {
+              this.getTile(clickedTile.x+1, clickedTile.y).erasePiece();
+            }
+          }
 
           // TODO: promotion
           break;
@@ -166,6 +204,8 @@ export class BoardComponent implements OnInit {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-i, clickedTile.y));
             if (this.getTile(clickedTile.x-i, clickedTile.y).piece !== undefined) break;
           }
+
+          // TODO: castling
           break;
         }
 
@@ -211,15 +251,19 @@ export class BoardComponent implements OnInit {
           if (clickedTile.x+1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y));
           if (clickedTile.y+1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y+1));
           if (clickedTile.x-1 >= 0) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-1, clickedTile.y));
+
+          if (clickedTile.x-1 >= 0 && clickedTile.y-1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-1, clickedTile.y-1));
+          if (clickedTile.x-1 >= 0 && clickedTile.y+1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-1, clickedTile.y+1));
+          if (clickedTile.x+1 >= 0 && clickedTile.y+1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y+1));
+          if (clickedTile.x+1 >= 0 && clickedTile.y-1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y-1));
         }
       }
       this.selectedPieceLegalTiles.push(clickedTile);
 
-      // available legal, no collision moves
-      for (let tile of this.selectedPieceLegalTiles) {
-        tile.highlightColor = "green";
-        tile.highlighted = true;
-      }
+      // for (let tile of this.selectedPieceLegalTiles) {
+      //   tile.highlightColor = "green";
+      //   tile.highlighted = true;
+      // }
     }
   }
 
@@ -232,16 +276,23 @@ export class BoardComponent implements OnInit {
 
       this.selectedPieceMove.to = clickedTile.coordinate;
 
-      // available legal, no collision moves
-      for (let tile of this.selectedPieceLegalTiles) {
-        tile.highlightColor = Tile.defaultHighlightColor;
-        tile.highlighted = false;
-      }
+      // for (let tile of this.selectedPieceLegalTiles) {
+      //   tile.highlightColor = Tile.defaultHighlightColor;
+      //   tile.highlighted = false;
+      // }
       this.selectedPieceLegalTiles.splice(0);
 
       if (clickedTile !== this.previousTile) {
         this.previousTile!.highlighted = true;
         clickedTile.highlighted = true;
+
+        if ((this.selectedPiece.id & 0b00111) == 0b00001) {
+          if (!this.selectedPiece.touched && Math.abs(this.previousTile!.y - clickedTile.y) == 2) {
+            this.selectedPiece.enpassantable = true;
+          } else {
+            this.selectedPiece.enpassantable = false;
+          }
+        }
 
         this.selectedPiece.touched = true;
         this.moves.push({...this.selectedPieceMove});
