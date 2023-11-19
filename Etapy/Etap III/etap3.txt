@@ -1,0 +1,7 @@
+Etap III – do 20.11 
+
+Przeniesienie mechaniki gry i algorytmów do programu. Realizacja komunikacji z użytkownikiem.
+
+19.11
+Działają tury graczy, legalne ruchy figur, en passant, bicie.
+Do dodania: szach, szachmat, remis (wszystkie rodzaje), zegar, roszada, promocja.
