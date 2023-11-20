@@ -64,28 +64,33 @@
 
 .piece {
     width: 100px; height: 100px;
-    
-    -webkit-user-drag: none;
-    user-select: none;
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
 
     cursor: grab;
 }
 
-.pieceEmpty {
+.pieceContainer {
     width: 100px; height: 100px;
-    
-    -webkit-user-drag: none;
-    user-select: none;
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .selectedPiece {
     width: 100px; height: 100px;
     position: absolute;
     pointer-events: none;
+
+    z-index: 1000;
+}
+
+.availableMove {
+    width: 35px; height: 35px;
+    border-radius: 50%;
+    background-color: green;
+    opacity: 0.6;
+
+    position: absolute;
+
+    z-index: 50;
 }

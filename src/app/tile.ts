@@ -18,6 +18,8 @@ export class Tile {
 
     piece?: Piece | undefined = undefined;
 
+    availableMove: boolean = false;
+
     static defaultHighlightColor: string = "yellow";
     highlightColor: string =  Tile.defaultHighlightColor;
     highlighted: boolean = false;

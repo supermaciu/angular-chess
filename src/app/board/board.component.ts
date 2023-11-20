@@ -71,6 +71,10 @@ export class BoardComponent implements OnInit {
     console.log(this.board);
   }
 
+  noDrag(event: Event) {
+    event.preventDefault();
+  }
+
   resetBoard() {
     this.board[0][0].piece = new Piece(0b10100);
     this.board[0][1].piece = new Piece(0b10010);
@@ -116,6 +120,8 @@ export class BoardComponent implements OnInit {
     if (this.selectedPiece === undefined && clickedTile.piece !== undefined && (clickedTile.piece.id & 0b11000) === this.playerTurnColor) {
       this.selectedPiece = clickedTile.piece;
       clickedTile.erasePiece();
+
+      clickedTile.availableMove = true;
 
       if (this.previousTile !== undefined) this.previousTile.highlighted = false;
       if (this.previousClickedTile !== undefined) this.previousClickedTile.highlighted = false;
@@ -252,18 +258,20 @@ export class BoardComponent implements OnInit {
           if (clickedTile.y+1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y+1));
           if (clickedTile.x-1 >= 0) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-1, clickedTile.y));
 
-          if (clickedTile.x-1 >= 0 && clickedTile.y-1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-1, clickedTile.y-1));
+          if (clickedTile.x-1 >= 0 && clickedTile.y-1 >= 0) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-1, clickedTile.y-1));
           if (clickedTile.x-1 >= 0 && clickedTile.y+1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-1, clickedTile.y+1));
-          if (clickedTile.x+1 >= 0 && clickedTile.y+1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y+1));
-          if (clickedTile.x+1 >= 0 && clickedTile.y-1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y-1));
+          if (clickedTile.x+1 <= 7 && clickedTile.y+1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y+1));
+          if (clickedTile.x+1 <= 7 && clickedTile.y-1 >= 0) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y-1));
         }
       }
-      this.selectedPieceLegalTiles.push(clickedTile);
 
-      // for (let tile of this.selectedPieceLegalTiles) {
-      //   tile.highlightColor = "green";
-      //   tile.highlighted = true;
-      // }
+      this.selectedPieceLegalTiles = this.selectedPieceLegalTiles.filter((value) => value.piece === undefined || (value.piece.id & 0b11000) !== this.playerTurnColor);
+
+      this.selectedPieceLegalTiles.push(clickedTile); // origin
+
+      for (let tile of this.selectedPieceLegalTiles) {
+        tile.availableMove = true;
+      }
     }
   }
 
@@ -276,10 +284,11 @@ export class BoardComponent implements OnInit {
 
       this.selectedPieceMove.to = clickedTile.coordinate;
 
-      // for (let tile of this.selectedPieceLegalTiles) {
-      //   tile.highlightColor = Tile.defaultHighlightColor;
-      //   tile.highlighted = false;
-      // }
+      this.previousTile!.availableMove = false;
+
+      for (let tile of this.selectedPieceLegalTiles) {
+        tile.availableMove = false;
+      }
       this.selectedPieceLegalTiles.splice(0);
 
       if (clickedTile !== this.previousTile) {

@@ -1,4 +1,4 @@
-<div class="boardContainer container-fluid p-3 d-flex justify-content-center align-items-center">
+<div class="boardContainer container-fluid p-3 d-flex justify-content-center align-items-center" (dragstart)="noDrag($event)">
     <p class="playerTurn">Tura {{playerTurnColor == 8 ? "białych" : "czarnych"}}</p>
     <div class="boardLayout" [class.grabbing]="selectedPiece">
         <table class="board" (mousemove)="getMouseCoordinates($event)">
@@ -17,8 +17,13 @@
             <tr *ngFor="let row of board; index as y">
                 <th>{{8-y}}</th>
                 <td *ngFor="let tile of row" (click)="attackPiece(tile)">
-                    <img class="piece" *ngIf="tile.piece !== undefined" src="{{tile.piece!.getUrl()}}" (click)="selectPiece(tile)">
-                    <div class="pieceEmpty" *ngIf="tile.piece === undefined" (click)="placeSelectedPiece(tile)"></div>
+                    <div class="pieceContainer confined" *ngIf="tile.piece !== undefined">
+                        <img class="piece" *ngIf="tile.piece !== undefined" src="{{tile.piece!.getUrl()}}" (click)="selectPiece(tile)">
+                        <div class="availableMove" *ngIf="tile.availableMove"></div>
+                    </div>
+                    <div class="pieceContainer empty" *ngIf="tile.piece === undefined" (click)="placeSelectedPiece(tile)">
+                        <div class="availableMove" *ngIf="tile.availableMove"></div>
+                    </div>
                     <div class="highlight" *ngIf="tile.highlighted" [style.backgroundColor]="tile.highlightColor"></div>
                 </td>
             </tr>
