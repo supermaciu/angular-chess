@@ -15,6 +15,7 @@ export class Piece {
 
     touched: boolean = false; // for pawn first move checking
     enpassantable: boolean = false; // for pawn first move checking
+    castlingable: boolean = false; // for king to decide if he can castle
 
     constructor(id: number) {
         this.id = id;

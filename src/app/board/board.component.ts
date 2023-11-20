@@ -76,30 +76,36 @@ export class BoardComponent implements OnInit {
   }
 
   resetBoard() {
-    this.board[0][0].piece = new Piece(0b10100);
-    this.board[0][1].piece = new Piece(0b10010);
-    this.board[0][2].piece = new Piece(0b10011);
-    this.board[0][3].piece = new Piece(0b10101);
-    this.board[0][4].piece = new Piece(0b10110);
-    this.board[0][5].piece = new Piece(0b10011);
-    this.board[0][6].piece = new Piece(0b10010);
-    this.board[0][7].piece = new Piece(0b10100);
+    // this.board[0][0].piece = new Piece(0b10100);
+    // this.board[0][1].piece = new Piece(0b10010);
+    // this.board[0][2].piece = new Piece(0b10011);
+    // this.board[0][3].piece = new Piece(0b10101);
+    // this.board[0][4].piece = new Piece(0b10110);
+    // this.board[0][5].piece = new Piece(0b10011);
+    // this.board[0][6].piece = new Piece(0b10010);
+    // this.board[0][7].piece = new Piece(0b10100);
 
-    for (let i = 0; i < 8; i++) {
-      this.board[1][i].piece = new Piece(0b10001);
-    }
+    // for (let i = 0; i < 8; i++) {
+    //   this.board[1][i].piece = new Piece(0b10001);
+    // }
 
-    for (let i = 0; i < 8; i++) {
-      this.board[6][i].piece = new Piece(0b01001);
-    }
+    // for (let i = 0; i < 8; i++) {
+    //   this.board[6][i].piece = new Piece(0b01001);
+    // }
+
+    // this.board[7][0].piece = new Piece(0b01100);
+    // this.board[7][1].piece = new Piece(0b01010);
+    // this.board[7][2].piece = new Piece(0b01011);
+    // this.board[7][3].piece = new Piece(0b01101);
+    // this.board[7][4].piece = new Piece(0b01110);
+    // this.board[7][5].piece = new Piece(0b01011);
+    // this.board[7][6].piece = new Piece(0b01010);
+    // this.board[7][7].piece = new Piece(0b01100);
+
+    this.board[7][4].piece = new Piece(0b01110);
+    this.board[6][4].piece = new Piece(0b01001);
 
     this.board[7][0].piece = new Piece(0b01100);
-    this.board[7][1].piece = new Piece(0b01010);
-    this.board[7][2].piece = new Piece(0b01011);
-    this.board[7][3].piece = new Piece(0b01101);
-    this.board[7][4].piece = new Piece(0b01110);
-    this.board[7][5].piece = new Piece(0b01011);
-    this.board[7][6].piece = new Piece(0b01010);
     this.board[7][7].piece = new Piece(0b01100);
   }
 
@@ -210,8 +216,6 @@ export class BoardComponent implements OnInit {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-i, clickedTile.y));
             if (this.getTile(clickedTile.x-i, clickedTile.y).piece !== undefined) break;
           }
-
-          // TODO: castling
           break;
         }
 
@@ -262,10 +266,29 @@ export class BoardComponent implements OnInit {
           if (clickedTile.x-1 >= 0 && clickedTile.y+1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-1, clickedTile.y+1));
           if (clickedTile.x+1 <= 7 && clickedTile.y+1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y+1));
           if (clickedTile.x+1 <= 7 && clickedTile.y-1 >= 0) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y-1));
+          
+          // TODO: castling, king cant be checked
+          if (!this.selectedPiece.touched) {
+            if (this.playerTurnColor === 0b01000) {
+              let rook1Tile = this.getTile(0, 7);
+              let rook2Tile = this.getTile(7, 7);
+
+              if (rook1Tile.piece !== undefined && !rook1Tile.piece.touched) {
+                this.selectedPieceLegalTiles.push(rook1Tile);
+                rook1Tile.piece.castlingable = true;
+              }
+              if (rook2Tile.piece !== undefined && !rook2Tile.piece.touched) {
+                this.selectedPieceLegalTiles.push(rook2Tile);
+                rook2Tile.piece.castlingable = true;
+              }
+            }
+          }
         }
       }
 
-      this.selectedPieceLegalTiles = this.selectedPieceLegalTiles.filter((value) => value.piece === undefined || (value.piece.id & 0b11000) !== this.playerTurnColor);
+      this.selectedPieceLegalTiles = this.selectedPieceLegalTiles.filter((value) => {
+        return value.piece === undefined || (value.piece.id & 0b11000) !== this.playerTurnColor || value.piece.castlingable;
+      });
 
       this.selectedPieceLegalTiles.push(clickedTile); // origin
 
@@ -306,7 +329,7 @@ export class BoardComponent implements OnInit {
         this.selectedPiece.touched = true;
         this.moves.push({...this.selectedPieceMove});
 
-        this.playerTurnColor = (this.playerTurnColor == 0b01000) ? 0b10000 : 0b01000;
+        // this.playerTurnColor = (this.playerTurnColor == 0b01000) ? 0b10000 : 0b01000;
 
         console.log(`${PIECECOLORS[(this.selectedPiece!.id & 0b11000)]} ${PIECETYPES[(this.selectedPiece!.id & 0b00111)]} ${this.selectedPieceMove.from}${this.selectedPieceMove.to} (${clickedTile.x}, ${clickedTile.y})`);
       }
@@ -329,5 +352,9 @@ export class BoardComponent implements OnInit {
         }
       }
     }
+  }
+
+  castlingKing(clickedTile: Tile) {
+    
   }
 }
