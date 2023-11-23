@@ -32,10 +32,11 @@ export class Tile {
 
     fnCallWhenPiecePlaced() {}
 
-    setPiece(piece: Piece) {
+    setPiece(piece: Piece): Piece {
         this.fnCallWhenPiecePlaced();
         this.fnCallWhenPiecePlaced = () => {};
         this.piece = piece;
+        return this.piece;
     }
 
     erasePiece() {

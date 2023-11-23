@@ -78,31 +78,31 @@ export class BoardComponent implements OnInit {
   }
 
   resetBoard() {
-    this.board[0][0].piece = new Piece(0b10100); this.board[0][0].piece.castlingable = true;
-    this.board[0][1].piece = new Piece(0b10010);
-    this.board[0][2].piece = new Piece(0b10011);
-    this.board[0][3].piece = new Piece(0b10101);
-    this.board[0][4].piece = new Piece(0b10110);
-    this.board[0][5].piece = new Piece(0b10011);
-    this.board[0][6].piece = new Piece(0b10010);
-    this.board[0][7].piece = new Piece(0b10100); this.board[0][7].piece.castlingable = true;
+    this.getTile(0, 0).setPiece(new Piece(PIECECOLORS.BLACK, PIECETYPES.ROOK)).castlingable = true;
+    this.getTile(1, 0).setPiece(new Piece(PIECECOLORS.BLACK, PIECETYPES.KNIGHT));
+    this.getTile(2, 0).setPiece(new Piece(PIECECOLORS.BLACK, PIECETYPES.BISHOP));
+    this.getTile(3, 0).setPiece(new Piece(PIECECOLORS.BLACK, PIECETYPES.QUEEN));
+    this.getTile(4, 0).setPiece(new Piece(PIECECOLORS.BLACK, PIECETYPES.KING));
+    this.getTile(5, 0).setPiece(new Piece(PIECECOLORS.BLACK, PIECETYPES.BISHOP));
+    this.getTile(6, 0).setPiece(new Piece(PIECECOLORS.BLACK, PIECETYPES.KNIGHT));
+    this.getTile(7, 0).setPiece(new Piece(PIECECOLORS.BLACK, PIECETYPES.ROOK)).castlingable = true;
 
     for (let i = 0; i < 8; i++) {
-      this.board[1][i].piece = new Piece(0b10001);
+      this.getTile(i, 1).setPiece(new Piece(PIECECOLORS.BLACK, PIECETYPES.PAWN));
     }
 
     for (let i = 0; i < 8; i++) {
-      this.board[6][i].piece = new Piece(0b01001);
+      this.getTile(i, 6).setPiece(new Piece(PIECECOLORS.WHITE, PIECETYPES.PAWN));
     }
 
-    this.board[7][0].piece = new Piece(0b01100); this.board[7][0].piece.castlingable = true;
-    this.board[7][1].piece = new Piece(0b01010);
-    this.board[7][2].piece = new Piece(0b01011);
-    this.board[7][3].piece = new Piece(0b01101);
-    this.board[7][4].piece = new Piece(0b01110);
-    this.board[7][5].piece = new Piece(0b01011);
-    this.board[7][6].piece = new Piece(0b01010);
-    this.board[7][7].piece = new Piece(0b01100); this.board[7][7].piece.castlingable = true;
+    this.getTile(0, 7).setPiece(new Piece(PIECECOLORS.WHITE, PIECETYPES.ROOK)).castlingable = true;
+    this.getTile(1, 7).setPiece(new Piece(PIECECOLORS.WHITE, PIECETYPES.KNIGHT));
+    this.getTile(2, 7).setPiece(new Piece(PIECECOLORS.WHITE, PIECETYPES.BISHOP));
+    this.getTile(3, 7).setPiece(new Piece(PIECECOLORS.WHITE, PIECETYPES.QUEEN));
+    this.getTile(4, 7).setPiece(new Piece(PIECECOLORS.WHITE, PIECETYPES.KING));
+    this.getTile(5, 7).setPiece(new Piece(PIECECOLORS.WHITE, PIECETYPES.BISHOP));
+    this.getTile(6, 7).setPiece(new Piece(PIECECOLORS.WHITE, PIECETYPES.KNIGHT));
+    this.getTile(7, 7).setPiece(new Piece(PIECECOLORS.WHITE, PIECETYPES.ROOK)).castlingable = true;
   }
 
   getTile(x: number, y: number): Tile {
@@ -119,7 +119,7 @@ export class BoardComponent implements OnInit {
   }
 
   selectPiece(clickedTile: Tile) {
-    if (this.selectedPiece === undefined && clickedTile.piece !== undefined && (clickedTile.piece.id & 0b11000) === this.playerTurnColor) {
+    if (this.selectedPiece === undefined && clickedTile.piece !== undefined && clickedTile.piece.color === this.playerTurnColor) {
       this.selectedPiece = clickedTile.piece;
       clickedTile.erasePiece();
 
@@ -133,8 +133,8 @@ export class BoardComponent implements OnInit {
 
       // legal, no collision checking moves
       // TODO: move this to Tile class, because evaluation is being done every time piece is selected, make a Board class to be able to import it anywhere
-      switch (this.selectedPiece!.id & 0b00111) { // type
-        case 0b00001: { // pawn
+      switch (this.selectedPiece.type) {
+        case PIECETYPES.PAWN: {
           let delta = ((this.selectedPiece!.id & 0b11000) == 0b01000) ? -1 : 1; // depends on color
           if (clickedTile.y+delta >= 0 && clickedTile.y+delta <= 7 && this.getTile(clickedTile.x, clickedTile.y+delta).piece === undefined) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y+delta));
           if (clickedTile.y+2*delta >= 0 && clickedTile.y+2*delta <= 7 && !this.selectedPiece!.touched && this.getTile(clickedTile.x, clickedTile.y+delta).piece === undefined) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y+2*delta));
@@ -160,7 +160,7 @@ export class BoardComponent implements OnInit {
           break;
         }
 
-        case 0b00010: { // knight
+        case PIECETYPES.KNIGHT: {
           if (clickedTile.x-1 >= 0 && clickedTile.y+2 >= 0 && clickedTile.x-1 <= 7 && clickedTile.y+2 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-1, clickedTile.y+2));
           if (clickedTile.x+1 >= 0 && clickedTile.y+2 >= 0 && clickedTile.x+1 <= 7 && clickedTile.y+2 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y+2));
 
@@ -175,7 +175,7 @@ export class BoardComponent implements OnInit {
           break;
         }
 
-        case 0b00011: { // bishop
+        case PIECETYPES.BISHOP: {
           for (let i = 1; i <= Math.min(clickedTile.x, clickedTile.y); i++) {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-i, clickedTile.y-i));
             if (this.getTile(clickedTile.x-i, clickedTile.y-i).piece !== undefined) break;
@@ -195,7 +195,7 @@ export class BoardComponent implements OnInit {
           break;
         }
 
-        case 0b00100: { // rook
+        case PIECETYPES.ROOK: {
           for (let i = 1; i <= clickedTile.y; i++) {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y-i));
             if (this.getTile(clickedTile.x, clickedTile.y-i).piece !== undefined) break;
@@ -215,7 +215,7 @@ export class BoardComponent implements OnInit {
           break;
         }
 
-        case 0b00101: { // queen
+        case PIECETYPES.QUEEN: {
           for (let i = 1; i <= Math.min(clickedTile.x, clickedTile.y); i++) {
             this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-i, clickedTile.y-i));
             if (this.getTile(clickedTile.x-i, clickedTile.y-i).piece !== undefined) break;
@@ -252,7 +252,7 @@ export class BoardComponent implements OnInit {
           break;
         }
 
-        case 0b00110: { //king
+        case PIECETYPES.KING: {
           if (clickedTile.y-1 >= 0) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y-1));
           if (clickedTile.x+1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y));
           if (clickedTile.y+1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y+1));
@@ -296,11 +296,11 @@ export class BoardComponent implements OnInit {
         }
       }
 
-      this.selectedPieceLegalTiles = this.selectedPieceLegalTiles.filter((value) => {
-        return value.piece === undefined || (value.piece.id & 0b11000) !== this.playerTurnColor || value.piece.castlingable;
+      this.selectedPieceLegalTiles = this.selectedPieceLegalTiles.filter((tile) => {
+        return tile.piece === undefined || tile.piece.color !== this.playerTurnColor || tile.piece.castlingable;
       });
 
-      this.selectedPieceLegalTiles.push(clickedTile); // origin
+      this.selectedPieceLegalTiles.push(clickedTile); // selectedPiece's origin
 
       for (let tile of this.selectedPieceLegalTiles) {
         tile.availableMove = true;
@@ -328,7 +328,7 @@ export class BoardComponent implements OnInit {
         this.previousTile!.highlighted = true;
         clickedTile.highlighted = true;
 
-        if ((this.selectedPiece.id & 0b00111) == 0b00001) {
+        if (this.selectedPiece.type == PIECETYPES.PAWN) {
           if (!this.selectedPiece.touched && Math.abs(this.previousTile!.y - clickedTile.y) == 2) {
             this.selectedPiece.enpassantable = true;
           } else {
@@ -337,11 +337,11 @@ export class BoardComponent implements OnInit {
         }
 
         this.selectedPiece.touched = true;
-        this.moves.push({...this.selectedPieceMove});
+        this.moves.push({...this.selectedPieceMove}); // pushing copy of Move object
 
-        this.playerTurnColor = (this.playerTurnColor == 0b01000) ? 0b10000 : 0b01000;
+        this.playerTurnColor = (this.playerTurnColor == PIECECOLORS.WHITE) ? PIECECOLORS.BLACK : PIECECOLORS.WHITE;
 
-        console.log(`${PIECECOLORS[(this.selectedPiece!.id & 0b11000)]} ${PIECETYPES[(this.selectedPiece!.id & 0b00111)]} ${this.selectedPieceMove.from}${this.selectedPieceMove.to} (${clickedTile.x}, ${clickedTile.y})`);
+        console.log(`${PIECECOLORS[(this.selectedPiece.color)]} ${PIECETYPES[this.selectedPiece.type]} ${this.selectedPieceMove.from}${this.selectedPieceMove.to} (${clickedTile.x}, ${clickedTile.y})`);
       }
 
       this.selectedPiece = undefined;
@@ -354,8 +354,8 @@ export class BoardComponent implements OnInit {
     // attacking, capturing
     if (this.selectedPieceLegalTiles.includes(clickedTile)) {
       if (this.selectedPiece !== undefined && clickedTile.piece !== undefined && this.selectedPieceMove.from !== clickedTile.coordinate) {
-        if ((clickedTile.piece.id & 0b11000) !== this.playerTurnColor) {
-          console.log(`${PIECECOLORS[(clickedTile.piece.id & 0b11000)]} ${PIECETYPES[(clickedTile.piece.id & 0b00111)]} attacked by ${PIECECOLORS[(this.selectedPiece.id & 0b11000)]} ${PIECETYPES[(this.selectedPiece.id & 0b00111)]} on ${BOARDCOORDINATES[clickedTile.y][clickedTile.x]} (${clickedTile.x}, ${clickedTile.y})`);
+        if (clickedTile.piece.color !== this.playerTurnColor) {
+          console.log(`${PIECECOLORS[clickedTile.piece.color]} ${PIECETYPES[clickedTile.piece.type]} attacked by ${PIECECOLORS[this.selectedPiece.color]} ${PIECETYPES[this.selectedPiece.type]} on ${BOARDCOORDINATES[clickedTile.y][clickedTile.x]} (${clickedTile.x}, ${clickedTile.y})`);
           
           clickedTile.erasePiece();
           this.placeSelectedPiece(clickedTile);
@@ -366,7 +366,7 @@ export class BoardComponent implements OnInit {
 
   castlingKing(clickedTile: Tile) {
     if (this.selectedPieceLegalTiles.includes(clickedTile)) {
-      if (this.selectedPiece !== undefined && this.selectedPiece.id === (this.playerTurnColor | 0b00110) && clickedTile.piece !== undefined && clickedTile.piece.id === (this.playerTurnColor | 0b00100)) {
+      if (this.selectedPiece !== undefined && this.selectedPiece.id === (this.playerTurnColor | PIECETYPES.KING) && clickedTile.piece !== undefined && clickedTile.piece.id === (this.playerTurnColor | PIECETYPES.ROOK)) {
         if (clickedTile.x == 0) { // queenside
           let newRookTile = this.getTile(clickedTile.x+3, clickedTile.y); 
           newRookTile.setPiece(clickedTile.piece);

@@ -1,28 +1,46 @@
-export var PIECECOLORS: string[] = [];
-PIECECOLORS[0b01000] = "white";
-PIECECOLORS[0b10000] = "black";
+export enum PIECECOLORS {
+    WHITE = 0b01000,
+    BLACK = 0b10000
+}
 
-export var PIECETYPES: string[] = [];
-PIECETYPES[0b00001] = "pawn";
-PIECETYPES[0b00010] = "knight";
-PIECETYPES[0b00011] = "bishop";
-PIECETYPES[0b00100] = "rook";
-PIECETYPES[0b00101] = "queen";
-PIECETYPES[0b00110] = "king";
+export enum PIECETYPES {
+    // NONE = 0b00000,
+    PAWN = 0b00001,
+    KNIGHT = 0b00010,
+    BISHOP = 0b00011,
+    ROOK = 0b00100,
+    QUEEN = 0b00101,
+    KING = 0b00110
+}
+
+export var PIECECOLORSSTRING: string[] = [];
+PIECECOLORSSTRING[PIECECOLORS.WHITE] = "white";
+PIECECOLORSSTRING[PIECECOLORS.BLACK] = "black";
+
+export var PIECETYPESSTRING: string[] = [];
+PIECETYPESSTRING[PIECETYPES.PAWN] = "pawn";
+PIECETYPESSTRING[PIECETYPES.KNIGHT] = "knight";
+PIECETYPESSTRING[PIECETYPES.BISHOP] = "bishop";
+PIECETYPESSTRING[PIECETYPES.ROOK] = "rook";
+PIECETYPESSTRING[PIECETYPES.QUEEN] = "queen";
+PIECETYPESSTRING[PIECETYPES.KING] = "king";
 
 export class Piece {
-    id: number;
+    readonly color: number;
+    readonly type: number;
+    readonly id: number;
 
     touched: boolean = false; // for pawn first move checking
     enpassantable: boolean = false; // for pawn first move checking
     castlingable: boolean = false; // for king to decide if he can castle
 
-    constructor(id: number) {
-        this.id = id;
+    constructor(color: number, type: number) {
+        this.color = color;
+        this.type = type;
+        this.id = this.color | this.type;
     }
 
     getUrl() {
-        return `../assets/pieces/bitwise/${this.id}.svg`;
-        // return `../assets/pieces/literal/${PIECETYPES[this.id & 0b00111]}-${PIECECOLORS[this.id & 0b11000][0]}.svg`;
+        return `../assets/pieces/${PIECETYPESSTRING[this.type]}-${PIECECOLORSSTRING[this.color]}.svg`;
     }
 }
