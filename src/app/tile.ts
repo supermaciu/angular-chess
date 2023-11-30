@@ -30,11 +30,11 @@ export class Tile {
         this.coordinate = BOARDCOORDINATES[y][x];
     }
 
-    fnCallWhenPiecePlaced() {}
+    callbackPiecePlaced() {}
 
     setPiece(piece: Piece): Piece {
-        this.fnCallWhenPiecePlaced();
-        this.fnCallWhenPiecePlaced = () => {};
+        this.callbackPiecePlaced();
+        this.callbackPiecePlaced = () => {};
         this.piece = piece;
         return this.piece;
     }
