@@ -3,12 +3,18 @@ import { BOARDCOORDINATES, Tile } from '../tile';
 import { PIECECOLORS, PIECETYPES, Piece } from '../piece';
 import { Move } from '../move';
 
+import * as bootstrap from 'bootstrap';
+
+declare var window: any;
+
 @Component({
   selector: 'app-board',
   templateUrl: './board.component.html',
   styleUrls: ['./board.component.css']
 })
 export class BoardComponent implements OnInit {
+  PIECETYPESTEMPLATE = PIECETYPES;
+
   board: Tile[][] = new Array(8).fill(undefined)
   .map((value_y, index_y, array_y) =>
     new Array(8).fill(undefined)
@@ -65,12 +71,11 @@ export class BoardComponent implements OnInit {
 
   //TODO: CHECKMATE !!!!!!!!!!!!!!!!!!
 
-  //TODO: RESTRUCTURE BIT REPRESENTATION TO NORMAL ENUM OR INTERFACE !!!!!!!!!!!!!!!!!!!
+  promotionModal: any;
 
   ngOnInit() {
     this.resetBoard();
-
-    console.log(this.board);
+    this.promotionModal = new window.bootstrap.Modal(document.getElementById("promotionModal"));
   }
 
   noDrag(event: Event) {
@@ -135,7 +140,7 @@ export class BoardComponent implements OnInit {
       // TODO: move this to Tile class, because evaluation is being done every time piece is selected, make a Board class to be able to import it anywhere
       switch (this.selectedPiece.type) {
         case PIECETYPES.PAWN: {
-          let delta = ((this.selectedPiece!.id & 0b11000) == 0b01000) ? -1 : 1; // depends on color
+          let delta = (this.selectedPiece!.color == 0b01000) ? -1 : 1; // depends on color
           if (clickedTile.y+delta >= 0 && clickedTile.y+delta <= 7 && this.getTile(clickedTile.x, clickedTile.y+delta).piece === undefined) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y+delta));
           if (clickedTile.y+2*delta >= 0 && clickedTile.y+2*delta <= 7 && !this.selectedPiece!.touched && this.getTile(clickedTile.x, clickedTile.y+delta).piece === undefined) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y+2*delta));
 
@@ -161,6 +166,7 @@ export class BoardComponent implements OnInit {
           }
 
           // TODO: promotion
+          
           break;
         }
 
@@ -338,6 +344,12 @@ export class BoardComponent implements OnInit {
           } else {
             this.selectedPiece.enpassantable = false;
           }
+
+          if (clickedTile.y == 0 || clickedTile.y == 7) {
+            this.promotionModal.show();
+            
+            
+          }
         }
 
         this.selectedPiece.touched = true;
@@ -389,6 +401,16 @@ export class BoardComponent implements OnInit {
           this.placeSelectedPiece(newKingTile);
         }
       }
+    }
+  }
+
+  promotePiece(tile: Tile | undefined, new_type: PIECETYPES) {
+    if (tile !== undefined) {
+      let old_color = tile.piece!.color;
+
+      tile.erasePiece();
+
+      tile.setPiece(new Piece(old_color, new_type));
     }
   }
 }

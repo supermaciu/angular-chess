@@ -94,3 +94,7 @@
 
     z-index: 50;
 }
+
+button img {
+    width: 100%;
+}

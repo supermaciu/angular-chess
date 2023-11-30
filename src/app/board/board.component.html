@@ -32,4 +32,28 @@
         </table>
     </div>
     <p class="playerTurn">Tura {{playerTurnColor == 8 ? "białych" : "czarnych"}}</p>
+
+    <div class="modal fade" id="promotionModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Promocja {{playerTurnColor != 8 ? "białego" : "czarnego"}} pionka</h5>
+            </div>
+            <div class="modal-body mx-auto d-flex">
+                <button type="button" class="btn m-2" data-bs-dismiss="modal" (click)="promotePiece(previousClickedTile, PIECETYPESTEMPLATE.KNIGHT)">
+                    <img src="{{playerTurnColor != 8 ? '../../assets/pieces/knight-white.svg' : '../../assets/pieces/knight-black.svg'}}">
+                </button>
+                <button type="button" class="btn m-2" data-bs-dismiss="modal" (click)="promotePiece(previousClickedTile, PIECETYPESTEMPLATE.BISHOP)">
+                    <img src="{{playerTurnColor != 8 ? '../../assets/pieces/bishop-white.svg' : '../../assets/pieces/bishop-black.svg'}}">
+                </button>
+                <button type="button" class="btn m-2" data-bs-dismiss="modal" (click)="promotePiece(previousClickedTile, PIECETYPESTEMPLATE.ROOK)">
+                    <img src="{{playerTurnColor != 8 ? '../../assets/pieces/rook-white.svg' : '../../assets/pieces/rook-black.svg'}}">
+                </button>
+                <button type="button" class="btn m-2" data-bs-dismiss="modal" (click)="promotePiece(previousClickedTile, PIECETYPESTEMPLATE.QUEEN)">
+                    <img src="{{playerTurnColor != 8 ? '../../assets/pieces/queen-white.svg' : '../../assets/pieces/queen-black.svg'}}">
+                </button>
+            </div>
+        </div>
+        </div>
+    </div>
 </div>
