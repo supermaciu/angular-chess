@@ -5,3 +5,7 @@ Przeniesienie mechaniki gry i algorytmów do programu. Realizacja komunikacji z 
 19.11
 Działają tury graczy, legalne ruchy figur, en passant, bicie.
 Do dodania: szach, szachmat, remis (wszystkie rodzaje), zegar, roszada, promocja.
+
+28.11
+Dodana roszada, promocja.
+Do dodania: szach, szachmat, remis (wszystkie rodzaje), zegar.
