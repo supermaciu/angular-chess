@@ -9,3 +9,6 @@ Do dodania: szach, szachmat, remis (wszystkie rodzaje), zegar, roszada, promocja
 28.11
 Dodana roszada, promocja.
 Do dodania: szach, szachmat, remis (wszystkie rodzaje), zegar.
+
+06.12
+Dodany szach.
