@@ -40,6 +40,7 @@ export class BoardComponent implements OnInit {
 
   selectedPieceLegalTiles: Tile[] = [];
 
+  kingAttackers: Tile[] = [];
   kingChecked: number = 0; // 0b01000 - white king checked, 0b10000 - black king checked
   previousKingTile?: Tile | undefined = undefined;
 
@@ -312,6 +313,19 @@ export class BoardComponent implements OnInit {
             legalMoves.push(rookTile);
           }
         }
+
+        // check
+        if (this.kingChecked == this.playerTurnColor) {
+          legalMoves = legalMoves.filter((t) => {
+            let valid = true;
+            for (let kingAttacker of this.kingAttackers) {
+              let attackerLegalMoves = this.evaluateLegalMoves(kingAttacker);
+              valid = !attackerLegalMoves.includes(t);
+            }
+
+            return valid;
+          });
+        }
       }
     }
 
@@ -412,10 +426,10 @@ export class BoardComponent implements OnInit {
 
         // check, testing after changing the player turn, if white made the attacking move then black is in check
         let kingTile = this.findTileById(this.playerTurnColor ^ PIECETYPES.KING);
-        let kingAttackers = this.findKingAttackers(kingTile!); // there always should be a king on the board
+        this.kingAttackers = this.findKingAttackers(kingTile!); // there always should be a king on the board
 
         // king in check
-        if (kingAttackers.length > 0) {
+        if (this.kingAttackers.length > 0) {
           console.log(PIECECOLORS[kingTile!.piece!.color] + " king in check");
 
           kingTile!.highlightColor = "red"; // telling the compiler that kingTile always will be found because it SHOULD always be on the board
@@ -430,6 +444,7 @@ export class BoardComponent implements OnInit {
           this.kingChecked = 0;
           this.previousKingTile.unhighlight();
           this.previousKingTile = undefined;
+          this.kingAttackers = [];
         }
 
         console.log(`${PIECECOLORS[(this.selectedPiece.color)]} ${PIECETYPES[this.selectedPiece.type]} ${this.selectedPieceMove.from} -> ${this.selectedPieceMove.to}`);
