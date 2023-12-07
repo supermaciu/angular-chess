@@ -41,10 +41,7 @@ export class BoardComponent implements OnInit {
   selectedPieceLegalTiles: Tile[] = [];
 
   kingChecked: number = 0; // 0b01000 - white king checked, 0b10000 - black king checked
-<<<<<<< HEAD
   previousKingTile?: Tile | undefined = undefined;
-=======
->>>>>>> 0d06574506258487ea7a767d1c3adadd26c8ad8b
 
   mouseLeft!: number;
   mouseTop!: number;
@@ -345,187 +342,6 @@ export class BoardComponent implements OnInit {
 
       this.previousTile = clickedTile;
       this.selectedPieceMove.from = clickedTile.coordinate;
-<<<<<<< HEAD
-=======
-
-      switch (this.selectedPiece.type) {
-        case PIECETYPES.PAWN: {
-          let delta = (this.selectedPiece!.color == 0b01000) ? -1 : 1; // depends on color
-          if (clickedTile.y+delta >= 0 && clickedTile.y+delta <= 7 && this.getTile(clickedTile.x, clickedTile.y+delta).piece === undefined) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y+delta));
-          if (clickedTile.y+2*delta >= 0 && clickedTile.y+2*delta <= 7 && !this.selectedPiece!.touched && this.getTile(clickedTile.x, clickedTile.y+delta).piece === undefined) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y+2*delta));
-
-          // capturing
-          if (clickedTile.x-1 >= 0 && clickedTile.y+delta >= 0 && clickedTile.y+delta <= 7 && this.getTile(clickedTile.x-1, clickedTile.y+delta).piece !== undefined) {
-            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-1, clickedTile.y+delta));
-          }
-          if (clickedTile.x+1 <= 7 && clickedTile.y+delta >= 0 && clickedTile.y+delta <= 7 && this.getTile(clickedTile.x+1, clickedTile.y+delta).piece !== undefined) {
-            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y+delta));
-          }
-
-          // en passant
-          if (clickedTile.x-1 >= 0 && this.getTile(clickedTile.x-1, clickedTile.y+delta).piece === undefined && this.getTile(clickedTile.x-1, clickedTile.y).piece !== undefined && this.getTile(clickedTile.x-1, clickedTile.y).piece!.color != this.playerTurnColor && this.getTile(clickedTile.x-1, clickedTile.y).piece!.enpassantable == true) {
-            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-1, clickedTile.y+delta));
-            this.getTile(clickedTile.x-1, clickedTile.y+delta).callbackPiecePlaced = () => {
-              this.getTile(clickedTile.x-1, clickedTile.y).erasePiece();
-            }
-          } 
-          if (clickedTile.x+1 <= 7 && this.getTile(clickedTile.x+1, clickedTile.y+delta).piece === undefined && this.getTile(clickedTile.x+1, clickedTile.y).piece !== undefined && this.getTile(clickedTile.x+1, clickedTile.y).piece!.color != this.playerTurnColor && this.getTile(clickedTile.x+1, clickedTile.y).piece!.enpassantable == true) {
-            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y+delta));
-            this.getTile(clickedTile.x+1, clickedTile.y+delta).callbackPiecePlaced = () => {
-              this.getTile(clickedTile.x+1, clickedTile.y).erasePiece();
-            }
-          }
-          break;
-        }
-
-        case PIECETYPES.KNIGHT: {
-          if (clickedTile.x-1 >= 0 && clickedTile.y+2 >= 0 && clickedTile.x-1 <= 7 && clickedTile.y+2 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-1, clickedTile.y+2));
-          if (clickedTile.x+1 >= 0 && clickedTile.y+2 >= 0 && clickedTile.x+1 <= 7 && clickedTile.y+2 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y+2));
-
-          if (clickedTile.x+2 >= 0 && clickedTile.y+1 >= 0 && clickedTile.x+2 <= 7 && clickedTile.y+1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+2, clickedTile.y+1));
-          if (clickedTile.x+2 >= 0 && clickedTile.y-1 >= 0 && clickedTile.x+2 <= 7 && clickedTile.y-1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+2, clickedTile.y-1));
-
-          if (clickedTile.x-1 >= 0 && clickedTile.y-2 >= 0 && clickedTile.x-1 <= 7 && clickedTile.y-2 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-1, clickedTile.y-2));
-          if (clickedTile.x+1 >= 0 && clickedTile.y-2 >= 0 && clickedTile.x+1 <= 7 && clickedTile.y-2 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y-2));
-
-          if (clickedTile.x-2 >= 0 && clickedTile.y+1 >= 0 && clickedTile.x-2 <= 7 && clickedTile.y+1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-2, clickedTile.y+1));
-          if (clickedTile.x-2 >= 0 && clickedTile.y-1 >= 0 && clickedTile.x-2 <= 7 && clickedTile.y-1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-2, clickedTile.y-1));
-          break;
-        }
-
-        case PIECETYPES.BISHOP: {
-          for (let i = 1; i <= Math.min(clickedTile.x, clickedTile.y); i++) {
-            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-i, clickedTile.y-i));
-            if (this.getTile(clickedTile.x-i, clickedTile.y-i).piece !== undefined) break;
-          }
-          for (let i = 1; i <= Math.min(7 - clickedTile.x, clickedTile.y); i++) {
-            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+i, clickedTile.y-i));
-            if (this.getTile(clickedTile.x+i, clickedTile.y-i).piece !== undefined) break;
-          }
-          for (let i = 1; i <= Math.min(7 - clickedTile.x, 7 - clickedTile.y); i++) {
-            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+i, clickedTile.y+i));
-            if (this.getTile(clickedTile.x+i, clickedTile.y+i).piece !== undefined) break;
-          }
-          for (let i = 1; i <= Math.min(clickedTile.x, 7 - clickedTile.y); i++) {
-            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-i, clickedTile.y+i));
-            if (this.getTile(clickedTile.x-i, clickedTile.y+i).piece !== undefined) break;
-          }
-          break;
-        }
-
-        case PIECETYPES.ROOK: {
-          for (let i = 1; i <= clickedTile.y; i++) {
-            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y-i));
-            if (this.getTile(clickedTile.x, clickedTile.y-i).piece !== undefined) break;
-          }
-          for (let i = 1; i <= 7 - clickedTile.x; i++) {
-            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+i, clickedTile.y));
-            if (this.getTile(clickedTile.x+i, clickedTile.y).piece !== undefined) break;
-          }
-          for (let i = 1; i <= 7 - clickedTile.y; i++) {
-            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y+i));
-            if (this.getTile(clickedTile.x, clickedTile.y+i).piece !== undefined) break;
-          }
-          for (let i = 1; i <= clickedTile.x; i++) {
-            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-i, clickedTile.y));
-            if (this.getTile(clickedTile.x-i, clickedTile.y).piece !== undefined) break;
-          }
-          break;
-        }
-
-        case PIECETYPES.QUEEN: {
-          for (let i = 1; i <= Math.min(clickedTile.x, clickedTile.y); i++) {
-            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-i, clickedTile.y-i));
-            if (this.getTile(clickedTile.x-i, clickedTile.y-i).piece !== undefined) break;
-          }
-          for (let i = 1; i <= Math.min(7 - clickedTile.x, clickedTile.y); i++) {
-            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+i, clickedTile.y-i));
-            if (this.getTile(clickedTile.x+i, clickedTile.y-i).piece !== undefined) break;
-          }
-          for (let i = 1; i <= Math.min(7 - clickedTile.x, 7 - clickedTile.y); i++) {
-            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+i, clickedTile.y+i));
-            if (this.getTile(clickedTile.x+i, clickedTile.y+i).piece !== undefined) break;
-          }
-          for (let i = 1; i <= Math.min(clickedTile.x, 7 - clickedTile.y); i++) {
-            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-i, clickedTile.y+i));
-            if (this.getTile(clickedTile.x-i, clickedTile.y+i).piece !== undefined) break;
-          }
-
-          for (let i = 1; i <= clickedTile.y; i++) {
-            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y-i));
-            if (this.getTile(clickedTile.x, clickedTile.y-i).piece !== undefined) break;
-          }
-          for (let i = 1; i <= 7 - clickedTile.x; i++) {
-            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+i, clickedTile.y));
-            if (this.getTile(clickedTile.x+i, clickedTile.y).piece !== undefined) break;
-          }
-          for (let i = 1; i <= 7 - clickedTile.y; i++) {
-            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y+i));
-            if (this.getTile(clickedTile.x, clickedTile.y+i).piece !== undefined) break;
-          }
-          for (let i = 1; i <= clickedTile.x; i++) {
-            this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-i, clickedTile.y));
-            if (this.getTile(clickedTile.x-i, clickedTile.y).piece !== undefined) break;
-          }
-          break;
-        }
-
-        case PIECETYPES.KING: {
-          if (clickedTile.y-1 >= 0) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y-1));
-          if (clickedTile.x+1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y));
-          if (clickedTile.y+1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x, clickedTile.y+1));
-          if (clickedTile.x-1 >= 0) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-1, clickedTile.y));
-
-          if (clickedTile.x-1 >= 0 && clickedTile.y-1 >= 0) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-1, clickedTile.y-1));
-          if (clickedTile.x-1 >= 0 && clickedTile.y+1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x-1, clickedTile.y+1));
-          if (clickedTile.x+1 <= 7 && clickedTile.y+1 <= 7) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y+1));
-          if (clickedTile.x+1 <= 7 && clickedTile.y-1 >= 0) this.selectedPieceLegalTiles.push(this.getTile(clickedTile.x+1, clickedTile.y-1));
-          
-          // TODO: castling: king cant be checked
-          // - Neither the king nor the rook has previously moved. done
-          // - There are no pieces between the king and the rook. done
-          // - The king is not currently in check.
-          // - The king does not pass through or finish on a square that is attacked by an enemy piece.
-
-          // long castling / queenside
-          if (this.kingChecked == 0) {
-            if (!this.selectedPiece.touched) {
-              let rookTile = this.getTile(0, clickedTile.y);
-  
-              let tileInBetween1 = this.getTile(1, clickedTile.y);
-              let tileInBetween2 = this.getTile(2, clickedTile.y);
-              let tileInBetween3 = this.getTile(3, clickedTile.y);
-  
-              if (rookTile.piece !== undefined && !rookTile.piece.touched && tileInBetween1.piece === undefined && tileInBetween2.piece === undefined && tileInBetween3.piece === undefined) {
-                this.selectedPieceLegalTiles.push(rookTile);
-              }
-            }
-  
-            // short castling / kingside
-            if (!this.selectedPiece.touched) {
-              let rookTile = this.getTile(7, clickedTile.y);
-  
-              let tileInBetween1 = this.getTile(5, clickedTile.y);
-              let tileInBetween2 = this.getTile(6, clickedTile.y);
-  
-              if (rookTile.piece !== undefined && !rookTile.piece.touched && tileInBetween1.piece === undefined && tileInBetween2.piece === undefined) {
-                this.selectedPieceLegalTiles.push(rookTile);
-              }
-            }
-          }
-        }
-      }
-
-      this.selectedPieceLegalTiles = this.selectedPieceLegalTiles.filter((tile) => {
-        return tile.piece === undefined || tile.piece.color !== this.playerTurnColor || tile.piece.castlingable;
-      });
-
-      this.selectedPieceLegalTiles.push(clickedTile); // piece's origin
-
-      for (let tile of this.selectedPieceLegalTiles) {
-        tile.availableMove = true;
-      }
->>>>>>> 0d06574506258487ea7a767d1c3adadd26c8ad8b
     }
   }
 
@@ -536,20 +352,12 @@ export class BoardComponent implements OnInit {
 
       clickedTile.setPiece(this.selectedPiece);
 
-      // this.previousTile!.availableMove = false; // ! notation because to first place a piece you need to select it
-
       for (let tile of this.selectedPieceLegalTiles) {
         tile.availableMove = false;
       }
-<<<<<<< HEAD
       this.selectedPieceLegalTiles.splice(0); // TODO: replace it with loading from tile object?
 
       if (clickedTile !== this.previousTile) { // if the move wasn't undone
-=======
-      this.selectedPieceLegalTiles.splice(0);
-
-      if (clickedTile !== this.previousTile) {
->>>>>>> 0d06574506258487ea7a767d1c3adadd26c8ad8b
         if (this.selectedPiece.type == PIECETYPES.PAWN) {
           // en passant condition
           if (!this.selectedPiece.touched && Math.abs(this.previousTile!.y - clickedTile.y) == 2) {
@@ -610,30 +418,18 @@ export class BoardComponent implements OnInit {
         if (kingAttackers.length > 0) {
           console.log(PIECECOLORS[kingTile!.piece!.color] + " king in check");
 
-<<<<<<< HEAD
           kingTile!.highlightColor = "red"; // telling the compiler that kingTile always will be found because it SHOULD always be on the board
           kingTile!.highlight();
 
           this.previousKingTile = kingTile;
-=======
-          kingTile!.highlightColor = "red";
-          kingTile!.highlight();
-
-          previousKingTile jssdbbdfsbgsdfbg
->>>>>>> 0d06574506258487ea7a767d1c3adadd26c8ad8b
 
           this.kingChecked = this.playerTurnColor;
 
           //checkmate...
-<<<<<<< HEAD
         } else if (this.previousKingTile !== undefined) {
           this.kingChecked = 0;
           this.previousKingTile.unhighlight();
           this.previousKingTile = undefined;
-=======
-        } else {
-          this.kingChecked = 0;
->>>>>>> 0d06574506258487ea7a767d1c3adadd26c8ad8b
         }
 
         console.log(`${PIECECOLORS[(this.selectedPiece.color)]} ${PIECETYPES[this.selectedPiece.type]} ${this.selectedPieceMove.from} -> ${this.selectedPieceMove.to}`);
@@ -648,11 +444,7 @@ export class BoardComponent implements OnInit {
     if (this.selectedPieceLegalTiles.includes(clickedTile)) {
       if (this.selectedPiece !== undefined && clickedTile.piece !== undefined && this.selectedPieceMove.from !== clickedTile.coordinate) {
         if (clickedTile.piece.color !== this.playerTurnColor) {
-<<<<<<< HEAD
           console.log(`${PIECECOLORS[clickedTile.piece.color]} ${PIECETYPES[clickedTile.piece.type]} captured by ${PIECECOLORS[this.selectedPiece.color]} ${PIECETYPES[this.selectedPiece.type]} on ${BOARDCOORDINATES[clickedTile.y][clickedTile.x]}`);
-=======
-          console.log(`${PIECECOLORS[clickedTile.piece.color]} ${PIECETYPES[clickedTile.piece.type]} captured by ${PIECECOLORS[this.selectedPiece.color]} ${PIECETYPES[this.selectedPiece.type]} on ${BOARDCOORDINATES[clickedTile.y][clickedTile.x]} (${clickedTile.x}, ${clickedTile.y})`);
->>>>>>> 0d06574506258487ea7a767d1c3adadd26c8ad8b
           
           clickedTile.erasePiece();
           this.placeSelectedPiece(clickedTile);
@@ -843,7 +635,6 @@ export class BoardComponent implements OnInit {
         potencialAttackers.push(knightTile8);
     }
       
-
     // king attackers found by checking if potencialAttacker's legal moves contain this king's tile 
     let attackers: Tile[] = [];
 
