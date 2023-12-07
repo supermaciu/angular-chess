@@ -30,11 +30,7 @@ export class Tile {
         this.coordinate = BOARDCOORDINATES[y][x];
     }
 
-    callbackPiecePlaced() {}
-
     setPiece(piece: Piece): Piece {
-        this.callbackPiecePlaced();
-        this.callbackPiecePlaced = () => {};
         this.piece = piece;
         return this.piece;
     }
