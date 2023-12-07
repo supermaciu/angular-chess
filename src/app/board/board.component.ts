@@ -35,8 +35,11 @@ export class BoardComponent implements OnInit {
 
   previousTile?: Tile | undefined = undefined;
   previousClickedTile?: Tile | undefined = undefined;
+  previousPreviousTile?: Tile | undefined = undefined;
 
   selectedPieceLegalTiles: Tile[] = [];
+
+  kingChecked: number = 0; // 0b01000 - white king checked, 0b10000 - black king checked
 
   mouseLeft!: number;
   mouseTop!: number;
@@ -326,9 +329,6 @@ export class BoardComponent implements OnInit {
 
       clickedTile.availableMove = true;
 
-      if (this.previousTile !== undefined) this.previousTile.highlighted = false;
-      if (this.previousClickedTile !== undefined) this.previousClickedTile.highlighted = false;
-
       this.previousTile = clickedTile;
       this.selectedPieceMove.from = clickedTile.coordinate;
 
@@ -472,27 +472,29 @@ export class BoardComponent implements OnInit {
           // - The king does not pass through or finish on a square that is attacked by an enemy piece.
 
           // long castling / queenside
-          if (!this.selectedPiece.touched) {
-            let rookTile = this.getTile(0, clickedTile.y);
-
-            let tileInBetween1 = this.getTile(1, clickedTile.y);
-            let tileInBetween2 = this.getTile(2, clickedTile.y);
-            let tileInBetween3 = this.getTile(3, clickedTile.y);
-
-            if (rookTile.piece !== undefined && !rookTile.piece.touched && tileInBetween1.piece === undefined && tileInBetween2.piece === undefined && tileInBetween3.piece === undefined) {
-              this.selectedPieceLegalTiles.push(rookTile);
+          if (this.kingChecked == 0) {
+            if (!this.selectedPiece.touched) {
+              let rookTile = this.getTile(0, clickedTile.y);
+  
+              let tileInBetween1 = this.getTile(1, clickedTile.y);
+              let tileInBetween2 = this.getTile(2, clickedTile.y);
+              let tileInBetween3 = this.getTile(3, clickedTile.y);
+  
+              if (rookTile.piece !== undefined && !rookTile.piece.touched && tileInBetween1.piece === undefined && tileInBetween2.piece === undefined && tileInBetween3.piece === undefined) {
+                this.selectedPieceLegalTiles.push(rookTile);
+              }
             }
-          }
-
-          // short castling / kingside
-          if (!this.selectedPiece.touched) {
-            let rookTile = this.getTile(7, clickedTile.y);
-
-            let tileInBetween1 = this.getTile(5, clickedTile.y);
-            let tileInBetween2 = this.getTile(6, clickedTile.y);
-
-            if (rookTile.piece !== undefined && !rookTile.piece.touched && tileInBetween1.piece === undefined && tileInBetween2.piece === undefined) {
-              this.selectedPieceLegalTiles.push(rookTile);
+  
+            // short castling / kingside
+            if (!this.selectedPiece.touched) {
+              let rookTile = this.getTile(7, clickedTile.y);
+  
+              let tileInBetween1 = this.getTile(5, clickedTile.y);
+              let tileInBetween2 = this.getTile(6, clickedTile.y);
+  
+              if (rookTile.piece !== undefined && !rookTile.piece.touched && tileInBetween1.piece === undefined && tileInBetween2.piece === undefined) {
+                this.selectedPieceLegalTiles.push(rookTile);
+              }
             }
           }
         }
@@ -527,9 +529,6 @@ export class BoardComponent implements OnInit {
       this.selectedPieceLegalTiles.splice(0);
 
       if (clickedTile !== this.previousTile) {
-        this.previousTile!.highlighted = true;
-        clickedTile.highlighted = true;
-
         if (this.selectedPiece.type == PIECETYPES.PAWN) {
           if (!this.selectedPiece.touched && Math.abs(this.previousTile!.y - clickedTile.y) == 2) {
             this.selectedPiece.enpassantable = true;
@@ -548,10 +547,19 @@ export class BoardComponent implements OnInit {
         this.moves.push({...this.selectedPieceMove}); // pushing copy of Move object
 
         this.playerTurnColor = (this.playerTurnColor == PIECECOLORS.WHITE) ? PIECECOLORS.BLACK : PIECECOLORS.WHITE;
+        
+        if (this.previousTile !== undefined) this.previousTile.unhighlight();
+        if (this.previousClickedTile !== undefined) this.previousClickedTile.unhighlight();
+        if (this.previousPreviousTile !== undefined) this.previousPreviousTile.unhighlight(); // for unhighlighting
 
-        this.previousClickedTile = clickedTile;
+        // last move tiles highlight
+        clickedTile.highlight();
+        this.previousTile!.highlight();
 
-        // check, testing after changing the player turn
+        this.previousClickedTile = clickedTile; // for unhighlighting
+        this.previousPreviousTile = this.previousTile; // for unhighlighting
+
+        // check, testing after changing the player turn, if white made the attacking move then black is in check
         let kingTile = this.findTileById(this.playerTurnColor ^ PIECETYPES.KING);
         let kingAttackers = this.findKingAttackers(kingTile!); // there always should be a king on the board
 
@@ -559,7 +567,16 @@ export class BoardComponent implements OnInit {
         if (kingAttackers !== undefined && kingAttackers.length > 0) {
           console.log(PIECECOLORS[kingTile!.piece!.color] + " king in check");
 
+          kingTile!.highlightColor = "red";
+          kingTile!.highlight();
+
+          previousKingTile jssdbbdfsbgsdfbg
+
+          this.kingChecked = this.playerTurnColor;
+
           //checkmate...
+        } else {
+          this.kingChecked = 0;
         }
 
         console.log(`${PIECECOLORS[(this.selectedPiece.color)]} ${PIECETYPES[this.selectedPiece.type]} ${this.selectedPieceMove.from} -> ${this.selectedPieceMove.to}`);
@@ -574,7 +591,7 @@ export class BoardComponent implements OnInit {
     if (this.selectedPieceLegalTiles.includes(clickedTile)) {
       if (this.selectedPiece !== undefined && clickedTile.piece !== undefined && this.selectedPieceMove.from !== clickedTile.coordinate) {
         if (clickedTile.piece.color !== this.playerTurnColor) {
-          console.log(`${PIECECOLORS[clickedTile.piece.color]} ${PIECETYPES[clickedTile.piece.type]} attacked by ${PIECECOLORS[this.selectedPiece.color]} ${PIECETYPES[this.selectedPiece.type]} on ${BOARDCOORDINATES[clickedTile.y][clickedTile.x]} (${clickedTile.x}, ${clickedTile.y})`);
+          console.log(`${PIECECOLORS[clickedTile.piece.color]} ${PIECETYPES[clickedTile.piece.type]} captured by ${PIECECOLORS[this.selectedPiece.color]} ${PIECETYPES[this.selectedPiece.type]} on ${BOARDCOORDINATES[clickedTile.y][clickedTile.x]} (${clickedTile.x}, ${clickedTile.y})`);
           
           clickedTile.erasePiece();
           this.placeSelectedPiece(clickedTile);
