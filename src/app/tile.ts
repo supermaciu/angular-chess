@@ -42,4 +42,13 @@ export class Tile {
     erasePiece() {
         this.piece = undefined;
     }
+
+    highlight() {
+        this.highlighted = true;
+    }
+
+    unhighlight() {
+        this.highlighted = false;
+        this.highlightColor = Tile.defaultHighlightColor;
+    }
 }
