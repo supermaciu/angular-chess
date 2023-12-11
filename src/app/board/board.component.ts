@@ -4,7 +4,7 @@ import { PIECECOLORS, PIECETYPES, Piece } from '../piece';
 import { Move } from '../move';
 
 import * as bootstrap from 'bootstrap';
-import { left } from '@popperjs/core';
+import { left, preventOverflow } from '@popperjs/core';
 
 declare var window: any; // for displaying bootstrap modals
 
@@ -81,6 +81,7 @@ export class BoardComponent implements OnInit {
   //TODO: when in check you need to remove it using the king or other pieces or by capturing the attacking enemy piece
   //TODO: checkmate
   //TODO: draw
+  //TODO: diffrenciate pawn attacking and moving
 
   // LATER TODOS
   //TODO: evaluation not on piece select
@@ -159,8 +160,10 @@ export class BoardComponent implements OnInit {
     switch (piece.type) {
       case PIECETYPES.PAWN: {
         let delta = (piece.color == PIECECOLORS.WHITE) ? -1 : 1; // depends on color
-        if (tile.y+delta >= 0 && tile.y+delta <= 7 && this.getTile(tile.x, tile.y+delta).piece === undefined) legalMoves.push(this.getTile(tile.x, tile.y+delta));
-        if (tile.y+2*delta >= 0 && tile.y+2*delta <= 7 && !piece.touched && this.getTile(tile.x, tile.y+delta).piece === undefined) legalMoves.push(this.getTile(tile.x, tile.y+2*delta));
+        if (tile.y+delta >= 0 && tile.y+delta <= 7 && this.getTile(tile.x, tile.y+delta).piece === undefined) {
+          legalMoves.push(this.getTile(tile.x, tile.y+delta));
+          if (tile.y+2*delta >= 0 && tile.y+2*delta <= 7 && !piece.touched && this.getTile(tile.x, tile.y+2*delta).piece === undefined) legalMoves.push(this.getTile(tile.x, tile.y+2*delta));
+        }
 
         // capturing
         if (tile.x-1 >= 0 && tile.y+delta >= 0 && tile.y+delta <= 7 && this.getTile(tile.x-1, tile.y+delta).piece !== undefined) {
@@ -318,6 +321,7 @@ export class BoardComponent implements OnInit {
         if (this.kingChecked == this.playerTurnColor) {
           legalMoves = legalMoves.filter((t) => {
             let valid = true;
+
             for (let kingAttacker of this.kingAttackers) {
               let attackerLegalMoves = this.evaluateLegalMoves(kingAttacker);
               valid = !attackerLegalMoves.includes(t);
@@ -326,6 +330,8 @@ export class BoardComponent implements OnInit {
             return valid;
           });
         }
+
+        // TODO: CANT MOVE TO ATTACKING TILE
       }
     }
 
@@ -333,7 +339,27 @@ export class BoardComponent implements OnInit {
       return t.piece === undefined || t.piece.color !== piece.color || t.piece.castlingable;
     });
 
-    legalMoves.push(tile);
+    if (this.kingChecked === piece.color && piece.type !== PIECETYPES.KING) {
+      let potencialKingProtectingTiles = this.getPotencialKingProtectingTiles(this.previousKingTile!); // get king tile moves
+      let kingProtectingTiles: Tile[] = [];
+
+      // TODO: NEED TO CHECK ALL TILES BETWEEN KING AND SLIDING ATTACKING PIECE 
+
+      // check for every attacking piece if it is included in king tile moves and make it piece's legal moves
+      for (let kingAttacker of this.kingAttackers) {
+        let kingAttackerLegalMoves = this.evaluateLegalMoves(kingAttacker);
+
+        kingProtectingTiles = potencialKingProtectingTiles.filter((t) => {
+          return kingAttackerLegalMoves.includes(t);
+        });
+  
+        legalMoves = legalMoves.filter((t) => {
+          return kingProtectingTiles.includes(t) || legalMoves.includes(kingAttacker);
+        });
+      }
+    }
+
+    legalMoves.push(tile); // cancel move
 
     return legalMoves;
   }
@@ -384,7 +410,7 @@ export class BoardComponent implements OnInit {
           let delta = (this.selectedPiece.color == PIECECOLORS.WHITE) ? -1 : 1;
           if (this.previousTile!.x-1 >= 0) {
             let leftPawnTile = this.getTile(this.previousTile!.x-1, this.previousTile!.y);
-            if (leftPawnTile.piece !== undefined && leftPawnTile.piece.type == PIECETYPES.PAWN && leftPawnTile.piece.color != this.playerTurnColor && leftPawnTile.piece.enpassantable == true) {
+            if (leftPawnTile !== undefined && leftPawnTile.piece !== undefined && leftPawnTile.piece.type == PIECETYPES.PAWN && leftPawnTile.piece.color != this.playerTurnColor && leftPawnTile.piece.enpassantable == true) {
               if (clickedTile.x == leftPawnTile.x && clickedTile.y == leftPawnTile.y+delta) {
                 leftPawnTile.erasePiece();
               }
@@ -392,7 +418,7 @@ export class BoardComponent implements OnInit {
           }
           if (clickedTile.x+1 <= 7) {
             let rightPawnTile = this.getTile(this.previousTile!.x+1, this.previousTile!.y);
-            if (rightPawnTile.piece !== undefined && rightPawnTile.piece.type == PIECETYPES.PAWN && rightPawnTile.piece.color != this.playerTurnColor && rightPawnTile.piece.enpassantable == true) {
+            if (rightPawnTile !== undefined && rightPawnTile.piece !== undefined && rightPawnTile.piece.type == PIECETYPES.PAWN && rightPawnTile.piece.color != this.playerTurnColor && rightPawnTile.piece.enpassantable == true) {
               if (clickedTile.x == rightPawnTile.x && clickedTile.y == rightPawnTile.y+delta) {
                 rightPawnTile.erasePiece();
               }
@@ -664,5 +690,107 @@ export class BoardComponent implements OnInit {
     }
 
     return attackers;
+  }
+
+  getPotencialKingProtectingTiles(kingTile: Tile): Tile[] {
+    let kingPiece = kingTile.piece;
+
+    if (kingPiece === undefined)
+      return [];
+
+    let x = kingTile.x;
+    let y = kingTile.y;
+
+    // get potencial attackers 
+    let potencialProtectingTiles: Tile[] = [];
+
+    if (y-1 >= 0) potencialProtectingTiles.push(this.getTile(x, y-1));
+    if (x+1 <= 7) potencialProtectingTiles.push(this.getTile(x+1, y));
+    if (y+1 <= 7) potencialProtectingTiles.push(this.getTile(x, y+1));
+    if (x-1 >= 0) potencialProtectingTiles.push(this.getTile(x-1, y));
+
+    if (x-1 >= 0 && y-1 >= 0) potencialProtectingTiles.push(this.getTile(x-1, y-1));
+    if (x-1 >= 0 && y+1 <= 7) potencialProtectingTiles.push(this.getTile(x-1, y+1));
+    if (x+1 <= 7 && y+1 <= 7) potencialProtectingTiles.push(this.getTile(x+1, y+1));
+    if (x+1 <= 7 && y-1 >= 0) potencialProtectingTiles.push(this.getTile(x+1, y-1));
+
+    // for (let i = 1; i <= Math.min(x, y); i++) {
+    //   let tile = this.getTile(x-i, y-i);
+    //   potencialProtectingTiles.push(tile);
+    // }
+    // for (let i = 1; i <= Math.min(7 - x, y); i++) {
+    //   let tile = this.getTile(x+i, y-i);
+    //   potencialProtectingTiles.push(tile);
+    // }
+    // for (let i = 1; i <= Math.min(7 - x, 7 - y); i++) {
+    //   let tile = this.getTile(x+i, y+i);
+    //   potencialProtectingTiles.push(tile);
+    // }
+    // for (let i = 1; i <= Math.min(x, 7 - y); i++) {
+    //   let tile = this.getTile(x-i, y+i);
+    //   potencialProtectingTiles.push(tile);
+    // }
+
+    // for (let i = 1; i <= y; i++) {
+    //   let tile = this.getTile(x, y-i);
+    //   potencialProtectingTiles.push(tile);
+    // }
+    // for (let i = 1; i <= 7 - x; i++) {
+    //   let tile = this.getTile(x+i, y);
+    //   potencialProtectingTiles.push(tile);
+    // }
+    // for (let i = 1; i <= 7 - y; i++) {
+    //   let tile = this.getTile(x, y+i);
+    //   potencialProtectingTiles.push(tile);
+    // }
+    // for (let i = 1; i <= x; i++) {
+    //   let tile = this.getTile(x-i, y);
+    //   potencialProtectingTiles.push(tile);
+    // }
+
+    // if (x-1 >= 0 && y+2 >= 0 && x-1 <= 7 && y+2 <= 7) {
+    //   let knightTile1 = this.getTile(x-1, y+2);
+    //   potencialProtectingTiles.push(knightTile1);
+    // }
+    
+    // if (x+1 >= 0 && y+2 >= 0 && x+1 <= 7 && y+2 <= 7) {
+    //   let knightTile2 = this.getTile(x+1, y+2);
+    //   potencialProtectingTiles.push(knightTile2);
+    // }
+      
+
+    // if (x+2 >= 0 && y+1 >= 0 && x+2 <= 7 && y+1 <= 7) {
+    //   let knightTile3 = this.getTile(x+2, y+1);
+    //   potencialProtectingTiles.push(knightTile3);
+    // }
+      
+    // if (x+2 >= 0 && y-1 >= 0 && x+2 <= 7 && y-1 <= 7) {
+    //   let knightTile4 = this.getTile(x+2, y-1);
+    //   potencialProtectingTiles.push(knightTile4);
+    // }
+      
+
+    // if (x-1 >= 0 && y-2 >= 0 && x-1 <= 7 && y-2 <= 7) {
+    //   let knightTile5 = this.getTile(x-1, y-2);
+    //   potencialProtectingTiles.push(knightTile5);
+    // }
+      
+    // if (x+1 >= 0 && y-2 >= 0 && x+1 <= 7 && y-2 <= 7) {
+    //   let knightTile6 = this.getTile(x+1, y-2);
+    //   potencialProtectingTiles.push(knightTile6);
+    // }
+      
+
+    // if (x-2 >= 0 && y+1 >= 0 && x-2 <= 7 && y+1 <= 7) {
+    //   let knightTile7 = this.getTile(x-2, y+1);
+    //   potencialProtectingTiles.push(knightTile7);
+    // }
+      
+    // if (x-2 >= 0 && y-1 >= 0 && x-2 <= 7 && y-1 <= 7) {
+    //   let knightTile8 = this.getTile(x-2, y-1);
+    //   potencialProtectingTiles.push(knightTile8);
+    // }
+
+    return potencialProtectingTiles;
   }
 }
