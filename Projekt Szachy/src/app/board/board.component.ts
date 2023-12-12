@@ -289,35 +289,37 @@ export class BoardComponent implements OnInit {
         // TODO: castling: king cant be checked
         // - Neither the king nor the rook has previously moved. done
         // - There are no pieces between the king and the rook. done
-        // - The king is not currently in check.
+        // - The king is not currently in check. done
         // - The king does not pass through or finish on a square that is attacked by an enemy piece.
 
         // long castling / queenside
-        if (piece.touched) {
-          let rookTile = this.getTile(0, tile.y);
+        if (this.kingChecked !== piece.color) {
+          if (piece.touched) {
+            let rookTile = this.getTile(0, tile.y);
 
-          let tileInBetween1 = this.getTile(1, tile.y);
-          let tileInBetween2 = this.getTile(2, tile.y);
-          let tileInBetween3 = this.getTile(3, tile.y);
+            let tileInBetween1 = this.getTile(1, tile.y);
+            let tileInBetween2 = this.getTile(2, tile.y);
+            let tileInBetween3 = this.getTile(3, tile.y);
 
-          if (rookTile.piece !== undefined && !rookTile.piece.touched && tileInBetween1.piece === undefined && tileInBetween2.piece === undefined && tileInBetween3.piece === undefined) {
-            legalMoves.push(rookTile);
+            if (rookTile.piece !== undefined && !rookTile.piece.touched && tileInBetween1.piece === undefined && tileInBetween2.piece === undefined && tileInBetween3.piece === undefined) {
+              legalMoves.push(rookTile);
+            }
+          }
+
+          // short castling / kingside
+          if (piece.touched) {
+            let rookTile = this.getTile(7, tile.y);
+
+            let tileInBetween1 = this.getTile(5, tile.y);
+            let tileInBetween2 = this.getTile(6, tile.y);
+
+            if (rookTile.piece !== undefined && !rookTile.piece.touched && tileInBetween1.piece === undefined && tileInBetween2.piece === undefined) {
+              legalMoves.push(rookTile);
+            }
           }
         }
 
-        // short castling / kingside
-        if (piece.touched) {
-          let rookTile = this.getTile(7, tile.y);
-
-          let tileInBetween1 = this.getTile(5, tile.y);
-          let tileInBetween2 = this.getTile(6, tile.y);
-
-          if (rookTile.piece !== undefined && !rookTile.piece.touched && tileInBetween1.piece === undefined && tileInBetween2.piece === undefined) {
-            legalMoves.push(rookTile);
-          }
-        }
-
-        // check
+        // check???
         if (this.kingChecked == this.playerTurnColor) {
           legalMoves = legalMoves.filter((t) => {
             let valid = true;
@@ -332,6 +334,7 @@ export class BoardComponent implements OnInit {
         }
 
         // TODO: CANT MOVE TO ATTACKING TILE
+        // check for every enemy piece if king moves include their legal moves and delete them
       }
     }
 
@@ -339,24 +342,21 @@ export class BoardComponent implements OnInit {
       return t.piece === undefined || t.piece.color !== piece.color || t.piece.castlingable;
     });
 
-    if (this.kingChecked === piece.color && piece.type !== PIECETYPES.KING) {
-      let potencialKingProtectingTiles = this.getPotencialKingProtectingTiles(this.previousKingTile!); // get king tile moves
-      let kingProtectingTiles: Tile[] = [];
+    // if king is checked
+    if (this.kingChecked !== 0 && piece.type !== PIECETYPES.KING) {
+      let checkPreventingMoves: Tile[] = [];
 
-      // TODO: NEED TO CHECK ALL TILES BETWEEN KING AND SLIDING ATTACKING PIECE 
-
-      // check for every attacking piece if it is included in king tile moves and make it piece's legal moves
       for (let kingAttacker of this.kingAttackers) {
-        let kingAttackerLegalMoves = this.evaluateLegalMoves(kingAttacker);
+        if (kingAttacker.piece!.type === PIECETYPES.BISHOP || kingAttacker.piece!.type === PIECETYPES.ROOK || kingAttacker.piece!.type === PIECETYPES.QUEEN) { // sliding pieces
+          // check if you can block with some piece between king tile and attacking piece tile (horizonal or diagonal)
+        }
 
-        kingProtectingTiles = potencialKingProtectingTiles.filter((t) => {
-          return kingAttackerLegalMoves.includes(t);
-        });
-  
-        legalMoves = legalMoves.filter((t) => {
-          return kingProtectingTiles.includes(t) || legalMoves.includes(kingAttacker);
-        });
+        checkPreventingMoves.push(kingAttacker); // capturing the attacking piece prevents check
       }
+
+      legalMoves = legalMoves.filter((t) => {
+        return checkPreventingMoves.includes(t);
+      })
     }
 
     legalMoves.push(tile); // cancel move
@@ -692,105 +692,5 @@ export class BoardComponent implements OnInit {
     return attackers;
   }
 
-  getPotencialKingProtectingTiles(kingTile: Tile): Tile[] {
-    let kingPiece = kingTile.piece;
-
-    if (kingPiece === undefined)
-      return [];
-
-    let x = kingTile.x;
-    let y = kingTile.y;
-
-    // get potencial attackers 
-    let potencialProtectingTiles: Tile[] = [];
-
-    if (y-1 >= 0) potencialProtectingTiles.push(this.getTile(x, y-1));
-    if (x+1 <= 7) potencialProtectingTiles.push(this.getTile(x+1, y));
-    if (y+1 <= 7) potencialProtectingTiles.push(this.getTile(x, y+1));
-    if (x-1 >= 0) potencialProtectingTiles.push(this.getTile(x-1, y));
-
-    if (x-1 >= 0 && y-1 >= 0) potencialProtectingTiles.push(this.getTile(x-1, y-1));
-    if (x-1 >= 0 && y+1 <= 7) potencialProtectingTiles.push(this.getTile(x-1, y+1));
-    if (x+1 <= 7 && y+1 <= 7) potencialProtectingTiles.push(this.getTile(x+1, y+1));
-    if (x+1 <= 7 && y-1 >= 0) potencialProtectingTiles.push(this.getTile(x+1, y-1));
-
-    // for (let i = 1; i <= Math.min(x, y); i++) {
-    //   let tile = this.getTile(x-i, y-i);
-    //   potencialProtectingTiles.push(tile);
-    // }
-    // for (let i = 1; i <= Math.min(7 - x, y); i++) {
-    //   let tile = this.getTile(x+i, y-i);
-    //   potencialProtectingTiles.push(tile);
-    // }
-    // for (let i = 1; i <= Math.min(7 - x, 7 - y); i++) {
-    //   let tile = this.getTile(x+i, y+i);
-    //   potencialProtectingTiles.push(tile);
-    // }
-    // for (let i = 1; i <= Math.min(x, 7 - y); i++) {
-    //   let tile = this.getTile(x-i, y+i);
-    //   potencialProtectingTiles.push(tile);
-    // }
-
-    // for (let i = 1; i <= y; i++) {
-    //   let tile = this.getTile(x, y-i);
-    //   potencialProtectingTiles.push(tile);
-    // }
-    // for (let i = 1; i <= 7 - x; i++) {
-    //   let tile = this.getTile(x+i, y);
-    //   potencialProtectingTiles.push(tile);
-    // }
-    // for (let i = 1; i <= 7 - y; i++) {
-    //   let tile = this.getTile(x, y+i);
-    //   potencialProtectingTiles.push(tile);
-    // }
-    // for (let i = 1; i <= x; i++) {
-    //   let tile = this.getTile(x-i, y);
-    //   potencialProtectingTiles.push(tile);
-    // }
-
-    // if (x-1 >= 0 && y+2 >= 0 && x-1 <= 7 && y+2 <= 7) {
-    //   let knightTile1 = this.getTile(x-1, y+2);
-    //   potencialProtectingTiles.push(knightTile1);
-    // }
-    
-    // if (x+1 >= 0 && y+2 >= 0 && x+1 <= 7 && y+2 <= 7) {
-    //   let knightTile2 = this.getTile(x+1, y+2);
-    //   potencialProtectingTiles.push(knightTile2);
-    // }
-      
-
-    // if (x+2 >= 0 && y+1 >= 0 && x+2 <= 7 && y+1 <= 7) {
-    //   let knightTile3 = this.getTile(x+2, y+1);
-    //   potencialProtectingTiles.push(knightTile3);
-    // }
-      
-    // if (x+2 >= 0 && y-1 >= 0 && x+2 <= 7 && y-1 <= 7) {
-    //   let knightTile4 = this.getTile(x+2, y-1);
-    //   potencialProtectingTiles.push(knightTile4);
-    // }
-      
-
-    // if (x-1 >= 0 && y-2 >= 0 && x-1 <= 7 && y-2 <= 7) {
-    //   let knightTile5 = this.getTile(x-1, y-2);
-    //   potencialProtectingTiles.push(knightTile5);
-    // }
-      
-    // if (x+1 >= 0 && y-2 >= 0 && x+1 <= 7 && y-2 <= 7) {
-    //   let knightTile6 = this.getTile(x+1, y-2);
-    //   potencialProtectingTiles.push(knightTile6);
-    // }
-      
-
-    // if (x-2 >= 0 && y+1 >= 0 && x-2 <= 7 && y+1 <= 7) {
-    //   let knightTile7 = this.getTile(x-2, y+1);
-    //   potencialProtectingTiles.push(knightTile7);
-    // }
-      
-    // if (x-2 >= 0 && y-1 >= 0 && x-2 <= 7 && y-1 <= 7) {
-    //   let knightTile8 = this.getTile(x-2, y-1);
-    //   potencialProtectingTiles.push(knightTile8);
-    // }
-
-    return potencialProtectingTiles;
-  }
+  
 }
