@@ -81,6 +81,7 @@ export class BoardComponent implements OnInit {
   //TODO: checkmate
   //TODO: draw
   //TODO: diffrenciate pawn attacking and moving
+  //TODO: fix highlight - different red show
 
   // LATER TODOS
   //TODO: evaluation not on piece select
@@ -149,7 +150,7 @@ export class BoardComponent implements OnInit {
     this.mouseTop = event.clientY - 50;
   }
 
-  evaluateLegalMoves(tile: Tile): Tile[] {
+  evaluateLegalMoves(tile: Tile, forKing: boolean = false): Tile[] {
     if (tile.piece === undefined)
       return [];
 
@@ -167,20 +168,23 @@ export class BoardComponent implements OnInit {
         }
 
         // capturing, adding to legal moves if the pawn can attack a opposite color piece OR the opposite color king is checking if it can move there
+        // STILL DOESNT WORK
+        
         if (tile.x-1 >= 0 && tile.y+delta >= 0 && tile.y+delta <= 7 && (this.getTile(tile.x-1, tile.y+delta).piece !== undefined || piece.color !== this.playerTurnColor)) {
           legalMoves.push(this.getTile(tile.x-1, tile.y+delta));
         }
         if (tile.x+1 <= 7 && tile.y+delta >= 0 && tile.y+delta <= 7 && (this.getTile(tile.x+1, tile.y+delta).piece !== undefined || piece.color !== this.playerTurnColor)) {
           legalMoves.push(this.getTile(tile.x+1, tile.y+delta));
         }
-        // SDABFASDBGBIASDABASFAB ASDBLAD ERROR NIGGA when promoting and attacking at the same time
     
         // en passant
-        if (tile.x-1 >= 0 && this.getTile(tile.x-1, tile.y+delta).piece === undefined && this.getTile(tile.x-1, tile.y).piece !== undefined && this.getTile(tile.x-1, tile.y).piece!.color != piece.color && this.getTile(tile.x-1, tile.y).piece!.enpassantable == true) {
-          legalMoves.push(this.getTile(tile.x-1, tile.y+delta));
-        } 
-        if (tile.x+1 <= 7 && this.getTile(tile.x+1, tile.y+delta).piece === undefined && this.getTile(tile.x+1, tile.y).piece !== undefined && this.getTile(tile.x+1, tile.y).piece!.color != piece.color && this.getTile(tile.x+1, tile.y).piece!.enpassantable == true) {
-          legalMoves.push(this.getTile(tile.x+1, tile.y+delta));
+        if (!forKing) {
+          if (tile.x-1 >= 0 && tile.y+delta >= 0 && tile.y+delta <= 7 && this.getTile(tile.x-1, tile.y+delta).piece === undefined && this.getTile(tile.x-1, tile.y).piece !== undefined && this.getTile(tile.x-1, tile.y).piece!.color != piece.color && this.getTile(tile.x-1, tile.y).piece!.enpassantable == true) {
+            legalMoves.push(this.getTile(tile.x-1, tile.y+delta));
+          } 
+          if (tile.x+1 <= 7 && tile.y+delta >= 0 && tile.y+delta <= 7 && this.getTile(tile.x+1, tile.y+delta).piece === undefined && this.getTile(tile.x+1, tile.y).piece !== undefined && this.getTile(tile.x+1, tile.y).piece!.color != piece.color && this.getTile(tile.x+1, tile.y).piece!.enpassantable == true) {
+            legalMoves.push(this.getTile(tile.x+1, tile.y+delta));
+          }
         }
         break;
       }
@@ -202,77 +206,93 @@ export class BoardComponent implements OnInit {
 
       case PIECETYPES.BISHOP: {
         for (let i = 1; i <= Math.min(tile.x, tile.y); i++) {
-          legalMoves.push(this.getTile(tile.x-i, tile.y-i));
-          if (this.getTile(tile.x-i, tile.y-i).piece !== undefined) break;
+          let t = this.getTile(tile.x-i, tile.y-i);
+          legalMoves.push(t);
+          if (t.piece !== undefined && !(forKing && t.piece.id === (this.playerTurnColor | PIECETYPES.KING))) break;
         }
         for (let i = 1; i <= Math.min(7 - tile.x, tile.y); i++) {
-          legalMoves.push(this.getTile(tile.x+i, tile.y-i));
-          if (this.getTile(tile.x+i, tile.y-i).piece !== undefined) break;
+          let t = this.getTile(tile.x+i, tile.y-i);
+          legalMoves.push(t);
+          if (t.piece !== undefined && !(forKing && t.piece.id === (this.playerTurnColor | PIECETYPES.KING))) break;
         }
         for (let i = 1; i <= Math.min(7 - tile.x, 7 - tile.y); i++) {
-          legalMoves.push(this.getTile(tile.x+i, tile.y+i));
-          if (this.getTile(tile.x+i, tile.y+i).piece !== undefined) break;
+          let t = this.getTile(tile.x+i, tile.y+i);
+          legalMoves.push(t);
+          if (t.piece !== undefined && !(forKing && t.piece.id === (this.playerTurnColor | PIECETYPES.KING))) break;
         }
         for (let i = 1; i <= Math.min(tile.x, 7 - tile.y); i++) {
-          legalMoves.push(this.getTile(tile.x-i, tile.y+i));
-          if (this.getTile(tile.x-i, tile.y+i).piece !== undefined) break;
+          let t = this.getTile(tile.x-i, tile.y+i);
+          legalMoves.push(t);
+          if (t.piece !== undefined && !(forKing && t.piece.id === (this.playerTurnColor | PIECETYPES.KING))) break;
         }
         break;
       }
 
       case PIECETYPES.ROOK: {
         for (let i = 1; i <= tile.y; i++) {
-          legalMoves.push(this.getTile(tile.x, tile.y-i));
-          if (this.getTile(tile.x, tile.y-i).piece !== undefined) break;
+          let t = this.getTile(tile.x, tile.y-i);
+          legalMoves.push(t);
+          if (t.piece !== undefined && !(forKing && t.piece.id === (this.playerTurnColor | PIECETYPES.KING))) break;
         }
         for (let i = 1; i <= 7 - tile.x; i++) {
-          legalMoves.push(this.getTile(tile.x+i, tile.y));
-          if (this.getTile(tile.x+i, tile.y).piece !== undefined) break;
+          let t = this.getTile(tile.x+i, tile.y);
+          legalMoves.push(t);
+          if (t.piece !== undefined && !(forKing && t.piece.id === (this.playerTurnColor | PIECETYPES.KING))) break;
         }
         for (let i = 1; i <= 7 - tile.y; i++) {
-          legalMoves.push(this.getTile(tile.x, tile.y+i));
-          if (this.getTile(tile.x, tile.y+i).piece !== undefined) break;
+          let t = this.getTile(tile.x, tile.y+i);
+          legalMoves.push(t);
+          if (t.piece !== undefined && !(forKing && t.piece.id === (this.playerTurnColor | PIECETYPES.KING))) break;
         }
         for (let i = 1; i <= tile.x; i++) {
-          legalMoves.push(this.getTile(tile.x-i, tile.y));
-          if (this.getTile(tile.x-i, tile.y).piece !== undefined) break;
+          let t = this.getTile(tile.x-i, tile.y);
+          legalMoves.push(t);
+          if (t.piece !== undefined && !(forKing && t.piece.id === (this.playerTurnColor | PIECETYPES.KING))) break;
         }
         break;
       }
 
       case PIECETYPES.QUEEN: {
         for (let i = 1; i <= Math.min(tile.x, tile.y); i++) {
-          legalMoves.push(this.getTile(tile.x-i, tile.y-i));
-          if (this.getTile(tile.x-i, tile.y-i).piece !== undefined) break;
+          let t = this.getTile(tile.x-i, tile.y-i);
+          legalMoves.push(t);
+          if (t.piece !== undefined && !(forKing && t.piece.id === (this.playerTurnColor | PIECETYPES.KING))) break;
         }
         for (let i = 1; i <= Math.min(7 - tile.x, tile.y); i++) {
-          legalMoves.push(this.getTile(tile.x+i, tile.y-i));
-          if (this.getTile(tile.x+i, tile.y-i).piece !== undefined) break;
+          let t = this.getTile(tile.x+i, tile.y-i);
+          legalMoves.push(t);
+          if (t.piece !== undefined && !(forKing && t.piece.id === (this.playerTurnColor | PIECETYPES.KING))) break;
         }
         for (let i = 1; i <= Math.min(7 - tile.x, 7 - tile.y); i++) {
-          legalMoves.push(this.getTile(tile.x+i, tile.y+i));
-          if (this.getTile(tile.x+i, tile.y+i).piece !== undefined) break;
+          let t = this.getTile(tile.x+i, tile.y+i);
+          legalMoves.push(t);
+          if (t.piece !== undefined && !(forKing && t.piece.id === (this.playerTurnColor | PIECETYPES.KING))) break;
         }
         for (let i = 1; i <= Math.min(tile.x, 7 - tile.y); i++) {
-          legalMoves.push(this.getTile(tile.x-i, tile.y+i));
-          if (this.getTile(tile.x-i, tile.y+i).piece !== undefined) break;
+          let t = this.getTile(tile.x-i, tile.y+i);
+          legalMoves.push(t);
+          if (t.piece !== undefined && !(forKing && t.piece.id === (this.playerTurnColor | PIECETYPES.KING))) break;
         }
 
         for (let i = 1; i <= tile.y; i++) {
-          legalMoves.push(this.getTile(tile.x, tile.y-i));
-          if (this.getTile(tile.x, tile.y-i).piece !== undefined) break;
+          let t = this.getTile(tile.x, tile.y-i);
+          legalMoves.push(t);
+          if (t.piece !== undefined && !(forKing && t.piece.id === (this.playerTurnColor | PIECETYPES.KING))) break;
         }
         for (let i = 1; i <= 7 - tile.x; i++) {
-          legalMoves.push(this.getTile(tile.x+i, tile.y));
-          if (this.getTile(tile.x+i, tile.y).piece !== undefined) break;
+          let t = this.getTile(tile.x+i, tile.y);
+          legalMoves.push(t);
+          if (t.piece !== undefined && !(forKing && t.piece.id === (this.playerTurnColor | PIECETYPES.KING))) break;
         }
         for (let i = 1; i <= 7 - tile.y; i++) {
-          legalMoves.push(this.getTile(tile.x, tile.y+i));
-          if (this.getTile(tile.x, tile.y+i).piece !== undefined) break;
+          let t = this.getTile(tile.x, tile.y+i);
+          legalMoves.push(t);
+          if (t.piece !== undefined && !(forKing && t.piece.id === (this.playerTurnColor | PIECETYPES.KING))) break;
         }
         for (let i = 1; i <= tile.x; i++) {
-          legalMoves.push(this.getTile(tile.x-i, tile.y));
-          if (this.getTile(tile.x-i, tile.y).piece !== undefined) break;
+          let t = this.getTile(tile.x-i, tile.y);
+          legalMoves.push(t);
+          if (t.piece !== undefined && !(forKing && t.piece.id === (this.playerTurnColor | PIECETYPES.KING))) break;
         }
         break;
       }
@@ -321,36 +341,36 @@ export class BoardComponent implements OnInit {
           }
         }
 
-        // check???
-        if (this.kingChecked == this.playerTurnColor) {
-          legalMoves = legalMoves.filter((t) => {
-            let valid = true;
-
-            for (let kingAttacker of this.kingAttackers) {
-              let attackerLegalMoves = this.evaluateLegalMoves(kingAttacker);
-              valid = !attackerLegalMoves.includes(t);
-            }
-
-            return valid;
-          });
-        }
-
-        // TODO: CANT MOVE TO ATTACKING TILE
-        // check for every enemy piece if king moves include their legal moves and delete them
-
-        let enemyPieces: Tile[] = [];
+        // throwing out moves that endanger the king and opposite color king moves
+        let allPieces: Tile[] = [];
         for (let row of this.board) {
           for (let tile of row) {
-            enemyPieces.push(tile);
+            allPieces.push(tile);
           }
         }
 
-        enemyPieces = enemyPieces.filter((t) => {
+        // all enemy pieces without king
+        let enemyPieces = allPieces.filter((t) => {
           return t.piece !== undefined && t.piece.color !== this.playerTurnColor && t.piece.type !== PIECETYPES.KING;
         });
 
         for (let enemyPiece of enemyPieces) {
-          let enemyPieceMoves = this.evaluateLegalMoves(enemyPiece);
+          let enemyPieceMoves = this.evaluateLegalMoves(enemyPiece, true);
+          // let enemyPieceMoves = this.evaluateLegalMoves(enemyPiece, true); - tutaj wartość jest kopiowana tylko do tego wywołania
+          // let enemyPieceMoves = this.evaluateLegalMoves(enemyPiece, forKing=true); - tutaj wartość jest zmieniana w każdym wywołaniu, i w tym i w zewnętrznym
+
+          // delete tiles in king's legal moves that occur in enemy piece's legal moves
+          legalMoves = legalMoves.filter((t) => {
+            return !enemyPieceMoves.includes(t);
+          });
+        }
+
+        // calling the same loop twice because it makes sure that the attacking piece tile that you can capture as a king is not watched by other opposite color pieces
+        // TODO: change for something more optimized - recall enemy pieces' moves, if in them are sliding pieces that watch other pieces, check them again
+        for (let enemyPiece of enemyPieces) {
+          let enemyPieceMoves = this.evaluateLegalMoves(enemyPiece, true);
+          // let enemyPieceMoves = this.evaluateLegalMoves(enemyPiece, false); - tutaj wartość jest kopiowana tylko do tego wywołania
+          // let enemyPieceMoves = this.evaluateLegalMoves(enemyPiece, !forKing=false); - tutaj wartość jest zmieniana w każdym wywołaniu, i w tym i w zewnętrznym
 
           // delete tiles in king's legal moves that occur in enemy piece's legal moves
           legalMoves = legalMoves.filter((t) => {
@@ -360,29 +380,35 @@ export class BoardComponent implements OnInit {
       }
     }
 
-    legalMoves = legalMoves.filter((t) => {
-      return t.piece === undefined || t.piece.color !== piece.color || t.piece.castlingable;
-    });
-
-    // if king is checked
-    if (this.kingChecked !== 0 && piece.type !== PIECETYPES.KING) {
-      let checkPreventingMoves: Tile[] = [];
-
-      for (let kingAttacker of this.kingAttackers) {
-        if (kingAttacker.piece!.type === PIECETYPES.BISHOP || kingAttacker.piece!.type === PIECETYPES.ROOK || kingAttacker.piece!.type === PIECETYPES.QUEEN) { // sliding pieces
-          // check if you can block with some piece between king tile and attacking piece tile (horizonal or diagonal)
-
-        }
-
-        checkPreventingMoves.push(kingAttacker); // capturing the attacking piece prevents check
-      }
-
-      // legalMoves = legalMoves.filter((t) => {
-      //   return checkPreventingMoves.includes(t);
-      // });
+    if (!forKing) { // normal
+      legalMoves = legalMoves.filter((t) => {
+        return t.piece === undefined || t.piece.color !== piece.color || t.piece.castlingable;
+      });
     }
 
-    legalMoves.push(tile); // cancel move
+    // TODO: check moves that check the king of the same color
+
+    // if king is checked
+    // if (this.kingChecked !== 0 && piece.type !== PIECETYPES.KING) {
+    //   let checkPreventingMoves: Tile[] = [];
+
+    //   for (let kingAttacker of this.kingAttackers) {
+    //     if (kingAttacker.piece!.type === PIECETYPES.BISHOP || kingAttacker.piece!.type === PIECETYPES.ROOK || kingAttacker.piece!.type === PIECETYPES.QUEEN) { // sliding pieces
+    //       // check if you can block with some piece between king tile and attacking piece tile (horizonal, vertical or diagonal)
+
+
+    //     }
+
+    //     checkPreventingMoves.push(kingAttacker); // capturing the attacking piece prevents check
+    //   }
+
+    //   legalMoves = legalMoves.filter((t) => {
+    //     return checkPreventingMoves.includes(t);
+    //   });
+    // }
+
+    if (!forKing)
+      legalMoves.push(tile); // origin
 
     return legalMoves;
   }
@@ -448,9 +474,10 @@ export class BoardComponent implements OnInit {
             }
           }
 
-          // promotion
+          // pawn promotion
           if (clickedTile.y == 0 || clickedTile.y == 7) {
             this.promotionModal.show();
+            // TODO: need to wait for this function to end for the check evaluation to be done because the pawn can promote to a piece that threatens the king
           }
         }
 
