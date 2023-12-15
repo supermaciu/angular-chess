@@ -41,7 +41,7 @@ export class BoardComponent implements OnInit {
 
   kingAttackers: Tile[] = [];
   kingChecked: number = 0; // 0b01000 - white king checked, 0b10000 - black king checked
-  previousKingTile?: Tile | undefined = undefined;
+  previousCheckedKingTile?: Tile | undefined = undefined;
 
   mouseLeft!: number;
   mouseTop!: number;
@@ -76,12 +76,12 @@ export class BoardComponent implements OnInit {
 
   // TO MAKE IT WORK
   //TODO: check
-  //TODO: cant make moves that endanger your king -> delete those moves from legalMoves for every piece
   //TODO: when in check you need to remove it using the king or other pieces or by capturing the attacking enemy piece
   //TODO: checkmate
   //TODO: draw
   //TODO: diffrenciate pawn attacking and moving
-  //TODO: fix highlight - different red show
+  //TODO: fix highlight - different red shows sometimes
+  //TODO: make hover highlight to see where you place the piece
 
   // LATER TODOS
   //TODO: evaluation not on piece select
@@ -160,7 +160,7 @@ export class BoardComponent implements OnInit {
     switch (piece.type) {
       case PIECETYPES.PAWN: {
         let delta = (piece.color == PIECECOLORS.WHITE) ? -1 : 1; // depends on color
-        if (tile.y+delta >= 0 && tile.y+delta <= 7 && this.getTile(tile.x, tile.y+delta).piece === undefined) {
+        if ((tile.y+delta >= 0 && tile.y+delta <= 7 && this.getTile(tile.x, tile.y+delta).piece === undefined) && !forKing) {
           legalMoves.push(this.getTile(tile.x, tile.y+delta));
           if (tile.y+2*delta >= 0 && tile.y+2*delta <= 7 && !piece.touched && this.getTile(tile.x, tile.y+2*delta).piece === undefined) {
             legalMoves.push(this.getTile(tile.x, tile.y+2*delta));
@@ -168,8 +168,6 @@ export class BoardComponent implements OnInit {
         }
 
         // capturing, adding to legal moves if the pawn can attack a opposite color piece OR the opposite color king is checking if it can move there
-        // STILL DOESNT WORK
-        
         if (tile.x-1 >= 0 && tile.y+delta >= 0 && tile.y+delta <= 7 && (this.getTile(tile.x-1, tile.y+delta).piece !== undefined || piece.color !== this.playerTurnColor)) {
           legalMoves.push(this.getTile(tile.x-1, tile.y+delta));
         }
@@ -177,14 +175,12 @@ export class BoardComponent implements OnInit {
           legalMoves.push(this.getTile(tile.x+1, tile.y+delta));
         }
     
-        // en passant
-        if (!forKing) {
-          if (tile.x-1 >= 0 && tile.y+delta >= 0 && tile.y+delta <= 7 && this.getTile(tile.x-1, tile.y+delta).piece === undefined && this.getTile(tile.x-1, tile.y).piece !== undefined && this.getTile(tile.x-1, tile.y).piece!.color != piece.color && this.getTile(tile.x-1, tile.y).piece!.enpassantable == true) {
-            legalMoves.push(this.getTile(tile.x-1, tile.y+delta));
-          } 
-          if (tile.x+1 <= 7 && tile.y+delta >= 0 && tile.y+delta <= 7 && this.getTile(tile.x+1, tile.y+delta).piece === undefined && this.getTile(tile.x+1, tile.y).piece !== undefined && this.getTile(tile.x+1, tile.y).piece!.color != piece.color && this.getTile(tile.x+1, tile.y).piece!.enpassantable == true) {
-            legalMoves.push(this.getTile(tile.x+1, tile.y+delta));
-          }
+        // // en passant
+        if (tile.x-1 >= 0 && tile.y+delta >= 0 && tile.y+delta <= 7 && this.getTile(tile.x-1, tile.y+delta).piece === undefined && this.getTile(tile.x-1, tile.y).piece !== undefined && this.getTile(tile.x-1, tile.y).piece!.color != piece.color && this.getTile(tile.x-1, tile.y).piece!.enpassantable == true) {
+          legalMoves.push(this.getTile(tile.x-1, tile.y+delta));
+        } 
+        if (tile.x+1 <= 7 && tile.y+delta >= 0 && tile.y+delta <= 7 && this.getTile(tile.x+1, tile.y+delta).piece === undefined && this.getTile(tile.x+1, tile.y).piece !== undefined && this.getTile(tile.x+1, tile.y).piece!.color != piece.color && this.getTile(tile.x+1, tile.y).piece!.enpassantable == true) {
+          legalMoves.push(this.getTile(tile.x+1, tile.y+delta));
         }
         break;
       }
@@ -307,6 +303,11 @@ export class BoardComponent implements OnInit {
         if (tile.x-1 >= 0 && tile.y+1 <= 7) legalMoves.push(this.getTile(tile.x-1, tile.y+1));
         if (tile.x+1 <= 7 && tile.y+1 <= 7) legalMoves.push(this.getTile(tile.x+1, tile.y+1));
         if (tile.x+1 <= 7 && tile.y-1 >= 0) legalMoves.push(this.getTile(tile.x+1, tile.y-1));
+
+        // only basic moves needed for king to king contact
+        if (forKing) {
+          break;
+        }
         
         // TODO: castling: king cant be checked
         // - Neither the king nor the rook has previously moved. done
@@ -349,9 +350,9 @@ export class BoardComponent implements OnInit {
           }
         }
 
-        // all enemy pieces without king
+        // all enemy pieces
         let enemyPieces = allPieces.filter((t) => {
-          return t.piece !== undefined && t.piece.color !== this.playerTurnColor && t.piece.type !== PIECETYPES.KING;
+          return t.piece !== undefined && t.piece.color !== this.playerTurnColor;
         });
 
         for (let enemyPiece of enemyPieces) {
@@ -369,10 +370,7 @@ export class BoardComponent implements OnInit {
         // TODO: change for something more optimized - recall enemy pieces' moves, if in them are sliding pieces that watch other pieces, check them again
         for (let enemyPiece of enemyPieces) {
           let enemyPieceMoves = this.evaluateLegalMoves(enemyPiece, true);
-          // let enemyPieceMoves = this.evaluateLegalMoves(enemyPiece, false); - tutaj wartość jest kopiowana tylko do tego wywołania
-          // let enemyPieceMoves = this.evaluateLegalMoves(enemyPiece, !forKing=false); - tutaj wartość jest zmieniana w każdym wywołaniu, i w tym i w zewnętrznym
 
-          // delete tiles in king's legal moves that occur in enemy piece's legal moves
           legalMoves = legalMoves.filter((t) => {
             return !enemyPieceMoves.includes(t);
           });
@@ -380,13 +378,15 @@ export class BoardComponent implements OnInit {
       }
     }
 
-    if (!forKing) { // normal
+    if (!forKing) { // selectPiece moves
       legalMoves = legalMoves.filter((t) => {
         return t.piece === undefined || t.piece.color !== piece.color || t.piece.castlingable;
       });
     }
 
-    // TODO: check moves that check the king of the same color
+    // TODO: check moves that check the king of the same color - same color pieces' moves that check the same color king\
+    // - check if friend piece's move checks its own king
+    // - if it does delete it from legal moves
 
     // if king is checked
     // if (this.kingChecked !== 0 && piece.type !== PIECETYPES.KING) {
@@ -501,7 +501,7 @@ export class BoardComponent implements OnInit {
         this.previousPreviousTile = this.previousTile; // for unhighlighting
 
         // check, testing after changing the player turn, if white made the attacking move then black is in check
-        let kingTile = this.findTileById(this.playerTurnColor ^ PIECETYPES.KING);
+        let kingTile = this.findTileById(this.playerTurnColor | PIECETYPES.KING);
         this.kingAttackers = this.findKingAttackers(kingTile!); // there always should be a king on the board
 
         // king in check
@@ -511,15 +511,15 @@ export class BoardComponent implements OnInit {
           kingTile!.highlightColor = "red"; // telling the compiler that kingTile always will be found because it SHOULD always be on the board
           kingTile!.highlight();
 
-          this.previousKingTile = kingTile;
+          this.previousCheckedKingTile = kingTile;
 
           this.kingChecked = this.playerTurnColor;
 
           //checkmate...
-        } else if (this.previousKingTile !== undefined) {
+        } else if (this.previousCheckedKingTile !== undefined) {
           this.kingChecked = 0;
-          this.previousKingTile.unhighlight();
-          this.previousKingTile = undefined;
+          this.previousCheckedKingTile.unhighlight();
+          this.previousCheckedKingTile = undefined;
           this.kingAttackers = [];
         }
 
@@ -732,7 +732,7 @@ export class BoardComponent implements OnInit {
     for (let potencialAttacker of potencialAttackers) {
       let potencialAttackerLegalMoves = this.evaluateLegalMoves(potencialAttacker);
 
-      if (potencialAttackerLegalMoves === undefined)
+      if (potencialAttackerLegalMoves.length === 0)
         continue;
 
       if (potencialAttackerLegalMoves.includes(kingTile))
