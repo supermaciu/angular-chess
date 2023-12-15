@@ -141,6 +141,18 @@ export class BoardComponent implements OnInit {
     return this.board[y][x];
   }
 
+  getAllPieces(): Tile[] {
+    let allPieces: Tile[] = [];
+
+    for (let row of this.board) {
+      for (let tile of row) {
+        allPieces.push(tile);
+      }
+    }
+
+    return allPieces;
+  }
+
   setTile(x: number, y: number, tile: Tile) {
     this.board[y][x] = tile;
   }
@@ -343,12 +355,7 @@ export class BoardComponent implements OnInit {
         }
 
         // throwing out moves that endanger the king and opposite color king moves
-        let allPieces: Tile[] = [];
-        for (let row of this.board) {
-          for (let tile of row) {
-            allPieces.push(tile);
-          }
-        }
+        let allPieces: Tile[] = this.getAllPieces();
 
         // all enemy pieces
         let enemyPieces = allPieces.filter((t) => {
@@ -383,11 +390,16 @@ export class BoardComponent implements OnInit {
         return t.piece === undefined || t.piece.color !== piece.color || t.piece.castlingable;
       });
     }
+    
+    if (piece.type !== PIECETYPES.KING) {
+      // TODO: check moves that check the king of the same color - same color pieces' moves that check the same color king\
+      // - check if friend piece's move checks its own king
+      // - if it does delete it from legal moves
+  
+      
+    }
 
-    // TODO: check moves that check the king of the same color - same color pieces' moves that check the same color king\
-    // - check if friend piece's move checks its own king
-    // - if it does delete it from legal moves
-
+    // TODO: only allow moves that block the check
     // if king is checked
     // if (this.kingChecked !== 0 && piece.type !== PIECETYPES.KING) {
     //   let checkPreventingMoves: Tile[] = [];
