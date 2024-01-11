@@ -409,7 +409,7 @@ export class BoardComponent implements OnInit {
       });
     }
     
-    if (piece.type !== PIECETYPES.KING) {
+    if (this.kingChecked === 0 && piece.type !== PIECETYPES.KING) {
       // TODO: check moves that check the king of the same color - same color pieces' moves that check the same color king\
       // - check if friend piece's move checks its own king
       // - if it does delete it from legal moves
@@ -417,7 +417,6 @@ export class BoardComponent implements OnInit {
       
     }
 
-    // TODO: only allow moves that block the check
     // if king is checked
     if (this.kingChecked !== 0 && piece.type !== PIECETYPES.KING && !checkPreveting) {
 
