@@ -43,6 +43,8 @@ export class BoardComponent implements OnInit {
   kingChecked: number = 0; // 0b01000 - white king checked, 0b10000 - black king checked
   previousCheckedKingTile?: Tile | undefined = undefined;
 
+  kingCheckPreventingTiles: Tile[] = [];
+
   mouseLeft!: number;
   mouseTop!: number;
 
@@ -75,13 +77,15 @@ export class BoardComponent implements OnInit {
   // -agreement from both players
 
   // TO MAKE IT WORK
-  //TODO: check
-  //TODO: when in check you need to remove it using the king or other pieces or by capturing the attacking enemy piece
+  //TODO: wait for promotion modal to be done
+  //TODO: cant make a non king move that endangers the king that is the same color
+
   //TODO: checkmate
   //TODO: draw
   //TODO: diffrenciate pawn attacking and moving
   //TODO: fix highlight - different red shows sometimes
   //TODO: make hover highlight to see where you place the piece
+  //TODO: dynamic tile sizing
 
   // LATER TODOS
   //TODO: evaluation not on piece select
@@ -98,6 +102,7 @@ export class BoardComponent implements OnInit {
   //TODO: simplify Board component's template to feature one function for every element that handles all events
 
   promotionModal: any;
+  promoting: boolean = false;
 
   ngOnInit() {
     this.resetBoard();
@@ -141,12 +146,25 @@ export class BoardComponent implements OnInit {
     return this.board[y][x];
   }
 
-  getAllPieces(): Tile[] {
+  getAllTiles(): Tile[] {
+    let allTiles: Tile[] = [];
+
+    for (let row of this.board) {
+      for (let tile of row) {
+        allTiles.push(tile);
+      }
+    }
+
+    return allTiles;
+  }
+
+  getAllPieces(color?: PIECECOLORS): Tile[] {
     let allPieces: Tile[] = [];
 
     for (let row of this.board) {
       for (let tile of row) {
-        allPieces.push(tile);
+        if (tile.piece !== undefined && (color !== undefined && tile.piece.color === color))
+          allPieces.push(tile);
       }
     }
 
@@ -162,7 +180,7 @@ export class BoardComponent implements OnInit {
     this.mouseTop = event.clientY - 50;
   }
 
-  evaluateLegalMoves(tile: Tile, forKing: boolean = false): Tile[] {
+  evaluateLegalMoves(tile: Tile, forKing: boolean = false, checkPreveting: boolean = false): Tile[] {
     if (tile.piece === undefined)
       return [];
 
@@ -316,7 +334,7 @@ export class BoardComponent implements OnInit {
         if (tile.x+1 <= 7 && tile.y+1 <= 7) legalMoves.push(this.getTile(tile.x+1, tile.y+1));
         if (tile.x+1 <= 7 && tile.y-1 >= 0) legalMoves.push(this.getTile(tile.x+1, tile.y-1));
 
-        // only basic moves needed for king to king contact
+        // only basic move checking needed for king to king contact
         if (forKing) {
           break;
         }
@@ -355,7 +373,7 @@ export class BoardComponent implements OnInit {
         }
 
         // throwing out moves that endanger the king and opposite color king moves
-        let allPieces: Tile[] = this.getAllPieces();
+        let allPieces: Tile[] = this.getAllTiles();
 
         // all enemy pieces
         let enemyPieces = allPieces.filter((t) => {
@@ -363,7 +381,7 @@ export class BoardComponent implements OnInit {
         });
 
         for (let enemyPiece of enemyPieces) {
-          let enemyPieceMoves = this.evaluateLegalMoves(enemyPiece, true);
+          let enemyPieceMoves = this.evaluateLegalMoves(enemyPiece, true, true);
           // let enemyPieceMoves = this.evaluateLegalMoves(enemyPiece, true); - tutaj wartość jest kopiowana tylko do tego wywołania
           // let enemyPieceMoves = this.evaluateLegalMoves(enemyPiece, forKing=true); - tutaj wartość jest zmieniana w każdym wywołaniu, i w tym i w zewnętrznym
 
@@ -376,7 +394,7 @@ export class BoardComponent implements OnInit {
         // calling the same loop twice because it makes sure that the attacking piece tile that you can capture as a king is not watched by other opposite color pieces
         // TODO: change for something more optimized - recall enemy pieces' moves, if in them are sliding pieces that watch other pieces, check them again
         for (let enemyPiece of enemyPieces) {
-          let enemyPieceMoves = this.evaluateLegalMoves(enemyPiece, true);
+          let enemyPieceMoves = this.evaluateLegalMoves(enemyPiece, true, true);
 
           legalMoves = legalMoves.filter((t) => {
             return !enemyPieceMoves.includes(t);
@@ -401,23 +419,65 @@ export class BoardComponent implements OnInit {
 
     // TODO: only allow moves that block the check
     // if king is checked
-    // if (this.kingChecked !== 0 && piece.type !== PIECETYPES.KING) {
-    //   let checkPreventingMoves: Tile[] = [];
+    if (this.kingChecked !== 0 && piece.type !== PIECETYPES.KING && !checkPreveting) {
 
-    //   for (let kingAttacker of this.kingAttackers) {
-    //     if (kingAttacker.piece!.type === PIECETYPES.BISHOP || kingAttacker.piece!.type === PIECETYPES.ROOK || kingAttacker.piece!.type === PIECETYPES.QUEEN) { // sliding pieces
-    //       // check if you can block with some piece between king tile and attacking piece tile (horizonal, vertical or diagonal)
+      this.kingCheckPreventingTiles.slice(0); // change for something better
 
+      let kingColorPieces = this.getAllPieces(this.kingChecked);
 
-    //     }
+      for (let kingAttacker of this.kingAttackers) {
+        let kingAttackerMoves = this.evaluateLegalMoves(kingAttacker, false, true);
 
-    //     checkPreventingMoves.push(kingAttacker); // capturing the attacking piece prevents check
-    //   }
+        for (let kingColorPiece of kingColorPieces) {
+          let kingColorPieceMoves = this.evaluateLegalMoves(kingColorPiece, false, true);
 
-    //   legalMoves = legalMoves.filter((t) => {
-    //     return checkPreventingMoves.includes(t);
-    //   });
-    // }
+          if (kingAttacker.piece!.type === PIECETYPES.BISHOP || kingAttacker.piece!.type === PIECETYPES.ROOK || kingAttacker.piece!.type === PIECETYPES.QUEEN) { // sliding pieces
+            
+            let kx = this.previousCheckedKingTile!.x;
+            let ky = this.previousCheckedKingTile!.y;
+
+            if (kingAttacker.piece!.type === PIECETYPES.ROOK || kingAttacker.piece!.type === PIECETYPES.QUEEN) {
+              // reduce kingAttackerMoves to only the portion that is directing the king in check
+              if (kingAttacker.x === kx && kingAttacker.y < ky) {
+                kingAttackerMoves = kingAttackerMoves.filter(t => t.x === kingAttacker.x && t.y > kingAttacker.y);
+              } else if (kingAttacker.x === kx && kingAttacker.y > ky) {
+                kingAttackerMoves = kingAttackerMoves.filter(t => t.x === kingAttacker.x && t.y < kingAttacker.y);
+              } else if (kingAttacker.x < kx && kingAttacker.y === ky) {
+                kingAttackerMoves = kingAttackerMoves.filter(t => t.x > kingAttacker.x && t.y === kingAttacker.y);
+              } else if (kingAttacker.x > kx && kingAttacker.y === ky) {
+                kingAttackerMoves = kingAttackerMoves.filter(t => t.x < kingAttacker.x && t.y === kingAttacker.y);
+              }
+            }
+
+            if (kingAttacker.piece!.type === PIECETYPES.BISHOP || kingAttacker.piece!.type === PIECETYPES.QUEEN) {
+              // reduce kingAttackerMoves to only the portion that is directing the king in check
+              if (kingAttacker.x < kx && kingAttacker.y < ky) {
+                kingAttackerMoves = kingAttackerMoves.filter(t => t.x > kingAttacker.x && t.y > kingAttacker.y);
+              } else if (kingAttacker.x > kx && kingAttacker.y < ky) {
+                kingAttackerMoves = kingAttackerMoves.filter(t => t.x < kingAttacker.x && t.y > kingAttacker.y);
+              } else if (kingAttacker.x > kx && kingAttacker.y > ky) {
+                kingAttackerMoves = kingAttackerMoves.filter(t => t.x < kingAttacker.x && t.y < kingAttacker.y);
+              } else if (kingAttacker.x < kx && kingAttacker.y > ky) {
+                kingAttackerMoves = kingAttackerMoves.filter(t => t.x > kingAttacker.x && t.y < kingAttacker.y);
+              }
+            }
+
+            // check if you can block with some piece between king tile and attacking piece tile (horizonal, vertical or diagonal)
+            for (let kingColorPieceMove of kingColorPieceMoves) {
+              if (kingAttackerMoves.includes(kingColorPieceMove))
+                this.kingCheckPreventingTiles.push(kingColorPieceMove);
+            }
+          }
+
+        }
+
+        this.kingCheckPreventingTiles.push(kingAttacker); // capturing the attacking piece prevents check
+      }
+
+      legalMoves = legalMoves.filter((t) => {
+        return this.kingCheckPreventingTiles.includes(t);
+      });
+    }
 
     if (!forKing)
       legalMoves.push(tile); // origin
@@ -489,7 +549,10 @@ export class BoardComponent implements OnInit {
           // pawn promotion
           if (clickedTile.y == 0 || clickedTile.y == 7) {
             this.promotionModal.show();
-            // TODO: need to wait for this function to end for the check evaluation to be done because the pawn can promote to a piece that threatens the king
+
+            // TODO: need to wait for this function to end for the check evaluation to be done because the pawn can promote to a piece that threatens the king IMPORTANT
+            // this.promoting = true;
+            // return; // "pausing"
           }
         }
 
@@ -753,6 +816,4 @@ export class BoardComponent implements OnInit {
 
     return attackers;
   }
-
-  
 }

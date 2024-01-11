@@ -1,3 +1,8 @@
+.board {
+    --board-tile-width: 100px;
+    --board-tile-height: 100px;
+}
+
 .playerTurn {
     font-size: 180%;
     font-weight: bold;
@@ -33,7 +38,8 @@
 }
 .board td {
     /* border: 1px solid; */
-    width: 100px; height: 100px;
+    width: var(--board-tile-width);
+    height: var(--board-tile-height);
 }
 
 .board .highlight {
@@ -43,7 +49,9 @@
     position: absolute;
     transform: translateY(-100%);
 
-    width: 100px; height: 100px;
+    width: var(--board-tile-width);
+    height: var(--board-tile-height);
+
     opacity: 0.5;
     z-index: 100;
     pointer-events: none;
@@ -63,25 +71,24 @@
 }
 
 .piece {
-    width: 100px; height: 100px;
+    width: var(--board-tile-width);
+    height: var(--board-tile-height);
 
     cursor: grab;
 }
 
 .pieceContainer {
-    width: 100px; height: 100px;
+    width: var(--board-tile-width);
+    height: var(--board-tile-height);
 
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-/* .pieceContainer:hover {
-    background-color: red;
-} */
-
 .selectedPiece {
-    width: 100px; height: 100px;
+    width: var(--board-tile-width);
+    height: var(--board-tile-height);
     position: absolute;
     pointer-events: none;
 
