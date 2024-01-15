@@ -424,7 +424,8 @@ export class BoardComponent implements OnInit {
 
       let kingColorPieces = this.getAllPieces(this.kingChecked);
 
-      for (let kingAttacker of this.kingAttackers) {
+      if (this.kingAttackers.length == 1) {
+        let kingAttacker = this.kingAttackers[0];
         let kingAttackerMoves = this.evaluateLegalMoves(kingAttacker, false, true);
 
         for (let kingColorPiece of kingColorPieces) {
