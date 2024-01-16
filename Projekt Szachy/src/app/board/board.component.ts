@@ -82,8 +82,7 @@ export class BoardComponent implements OnInit {
 
   //TODO: checkmate
   //TODO: draw
-  //TODO: diffrenciate pawn attacking and moving
-  //TODO: fix highlight - different red shows sometimes
+  //TODO: fix check highlight - different red shows sometimes
   //TODO: make hover highlight to see where you place the piece
   //TODO: dynamic tile sizing
 
@@ -338,39 +337,6 @@ export class BoardComponent implements OnInit {
         if (forKing) {
           break;
         }
-        
-        // TODO: castling: king cant be checked
-        // - Neither the king nor the rook has previously moved. done
-        // - There are no pieces between the king and the rook. done
-        // - The king is not currently in check. done
-        // - The king does not pass through or finish on a square that is attacked by an enemy piece.
-
-        // long castling / queenside
-        if (this.kingChecked !== piece.color) {
-          if (!piece.touched) {
-            let rookTile = this.getTile(0, tile.y);
-
-            let tileInBetween1 = this.getTile(1, tile.y);
-            let tileInBetween2 = this.getTile(2, tile.y);
-            let tileInBetween3 = this.getTile(3, tile.y);
-
-            if (rookTile.piece !== undefined && !rookTile.piece.touched && tileInBetween1.piece === undefined && tileInBetween2.piece === undefined && tileInBetween3.piece === undefined) {
-              legalMoves.push(rookTile);
-            }
-          }
-
-          // short castling / kingside
-          if (!piece.touched) {
-            let rookTile = this.getTile(7, tile.y);
-
-            let tileInBetween1 = this.getTile(5, tile.y);
-            let tileInBetween2 = this.getTile(6, tile.y);
-
-            if (rookTile.piece !== undefined && !rookTile.piece.touched && tileInBetween1.piece === undefined && tileInBetween2.piece === undefined) {
-              legalMoves.push(rookTile);
-            }
-          }
-        }
 
         // throwing out moves that endanger the king and opposite color king moves
         let allPieces: Tile[] = this.getAllTiles();
@@ -400,6 +366,57 @@ export class BoardComponent implements OnInit {
             return !enemyPieceMoves.includes(t);
           });
         }
+
+        // long castling / queenside
+        if (this.kingChecked !== piece.color) {
+          if (!piece.touched) {
+            let tileInBetween1 = this.getTile(1, tile.y);
+            let tileInBetween2 = this.getTile(2, tile.y);
+            let tileInBetween3 = this.getTile(3, tile.y);
+
+            let isAttacked = false;
+            for (let enemyPiece of enemyPieces) {
+              let enemyPieceMoves = this.evaluateLegalMoves(enemyPiece, true, true);
+
+              if (enemyPieceMoves.includes(tileInBetween1) || enemyPieceMoves.includes(tileInBetween2) || enemyPieceMoves.includes(tileInBetween3)) {
+                isAttacked = true;
+                break;
+              }
+            }
+
+            if (!isAttacked) {
+              let rookTile = this.getTile(0, tile.y);
+  
+              if (rookTile.piece !== undefined && !rookTile.piece.touched && tileInBetween1.piece === undefined && tileInBetween2.piece === undefined && tileInBetween3.piece === undefined) {
+                legalMoves.push(rookTile);
+              }
+            }
+          }
+
+          // short castling / kingside
+          if (!piece.touched) {
+            let tileInBetween1 = this.getTile(5, tile.y);
+            let tileInBetween2 = this.getTile(6, tile.y);
+
+            let isAttacked = false;
+            for (let enemyPiece of enemyPieces) {
+              let enemyPieceMoves = this.evaluateLegalMoves(enemyPiece, true, true);
+
+              if (enemyPieceMoves.includes(tileInBetween1) || enemyPieceMoves.includes(tileInBetween2)) {
+                isAttacked = true;
+                break;
+              }
+            }
+
+            if (!isAttacked) {
+              let rookTile = this.getTile(7, tile.y);
+  
+              if (rookTile.piece !== undefined && !rookTile.piece.touched && tileInBetween1.piece === undefined && tileInBetween2.piece === undefined) {
+                legalMoves.push(rookTile);
+              }
+            }
+          }
+        }
       }
     }
 
@@ -410,17 +427,12 @@ export class BoardComponent implements OnInit {
     }
     
     if (this.kingChecked === 0 && piece.type !== PIECETYPES.KING) {
-      // TODO: check moves that check the king of the same color - same color pieces' moves that check the same color king\
-      // - check if friend piece's move checks its own king
-      // - if it does delete it from legal moves
-  
-      
+      // TODO: check moves that check the king of the same color - same color pieces' moves that check the same color king
     }
 
     // if king is checked
     if (this.kingChecked !== 0 && piece.type !== PIECETYPES.KING && !checkPreveting) {
-
-      this.kingCheckPreventingTiles.slice(0); // change for something better
+      this.kingCheckPreventingTiles.splice(0); // change for something better
 
       let kingColorPieces = this.getAllPieces(this.kingChecked);
 
@@ -806,9 +818,6 @@ export class BoardComponent implements OnInit {
 
     for (let potencialAttacker of potencialAttackers) {
       let potencialAttackerLegalMoves = this.evaluateLegalMoves(potencialAttacker);
-
-      if (potencialAttackerLegalMoves.length === 0)
-        continue;
 
       if (potencialAttackerLegalMoves.includes(kingTile))
         attackers.push(potencialAttacker);
