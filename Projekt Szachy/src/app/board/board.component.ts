@@ -437,62 +437,6 @@ export class BoardComponent implements OnInit {
     }
 
     let kingColorPieces = this.getAllPieces(this.kingChecked);
-    
-    // check prevented moves - throwing out non-king moves that endanger the king - king not checked
-    if (this.kingChecked === 0 && piece.type !== PIECETYPES.KING && !checkPreveting) {
-
-      let kingTile = this.findTileById(this.playerTurnColor | PIECETYPES.KING);
-      // phasing means that to find potencial king attackers its needs to phase through the same colored pieces
-      let potencialKingAttackers = this.findPotencialAttackers(kingTile!, true).filter((t) => {
-        return t.piece!.type === PIECETYPES.BISHOP || t.piece!.type === PIECETYPES.ROOK || t.piece!.type === PIECETYPES.QUEEN;
-      });
-
-      for (let potencialKingAttacker of potencialKingAttackers) {
-
-        let potencialKingAttackerMoves = this.getQueenMoveSetTilesFromOrigin(potencialKingAttacker);
-    
-        let kx = kingTile!.x;
-        let ky = kingTile!.y;
-
-        // reduce potencialKingAttackerMoves to only the portion that is directing the king in check
-        if (potencialKingAttacker.piece!.type === PIECETYPES.ROOK || potencialKingAttacker.piece!.type === PIECETYPES.QUEEN) {
-          if (potencialKingAttacker.x === kx && potencialKingAttacker.y < ky) {
-            potencialKingAttackerMoves = potencialKingAttackerMoves.filter(t => t.x === potencialKingAttacker.x && t.y > potencialKingAttacker.y);
-          } else if (potencialKingAttacker.x === kx && potencialKingAttacker.y > ky) {
-            potencialKingAttackerMoves = potencialKingAttackerMoves.filter(t => t.x === potencialKingAttacker.x && t.y < potencialKingAttacker.y);
-          } else if (potencialKingAttacker.x < kx && potencialKingAttacker.y === ky) {
-            potencialKingAttackerMoves = potencialKingAttackerMoves.filter(t => t.x > potencialKingAttacker.x && t.y === potencialKingAttacker.y);
-          } else if (potencialKingAttacker.x > kx && potencialKingAttacker.y === ky) {
-            potencialKingAttackerMoves = potencialKingAttackerMoves.filter(t => t.x < potencialKingAttacker.x && t.y === potencialKingAttacker.y);
-          }
-        }
-
-        if (potencialKingAttacker.piece!.type === PIECETYPES.BISHOP || potencialKingAttacker.piece!.type === PIECETYPES.QUEEN) {
-          if (potencialKingAttacker.x < kx && potencialKingAttacker.y < ky) {
-            potencialKingAttackerMoves = potencialKingAttackerMoves.filter(t => t.x > potencialKingAttacker.x && t.y > potencialKingAttacker.y);
-          } else if (potencialKingAttacker.x > kx && potencialKingAttacker.y < ky) {
-            potencialKingAttackerMoves = potencialKingAttackerMoves.filter(t => t.x < potencialKingAttacker.x && t.y > potencialKingAttacker.y);
-          } else if (potencialKingAttacker.x > kx && potencialKingAttacker.y > ky) {
-            potencialKingAttackerMoves = potencialKingAttackerMoves.filter(t => t.x < potencialKingAttacker.x && t.y < potencialKingAttacker.y);
-          } else if (potencialKingAttacker.x < kx && potencialKingAttacker.y > ky) {
-            potencialKingAttackerMoves = potencialKingAttackerMoves.filter(t => t.x > potencialKingAttacker.x && t.y < potencialKingAttacker.y);
-          }
-        }
-
-        let kingColorPiecesInBetween = potencialKingAttackerMoves.filter((t) => {
-          return t.piece !== undefined && t.piece.color === this.playerTurnColor && t.piece.type !== PIECETYPES.KING;
-        });
-
-        // if 2 pieces are in between the king and the attacker no matter what move you make king won't be in check
-        if (kingColorPiecesInBetween.length === 1) {
-          if (kingColorPiecesInBetween[0] === tile) { // if selected piece is the one between the king and the attacker
-            legalMoves = legalMoves.filter((t) => {
-              return potencialKingAttackerMoves.includes(t) || t === potencialKingAttacker;
-            })
-          }
-        }
-      }
-    }
 
     // if king is checked, check defending non-king moves - king checked
     if (this.kingChecked !== 0 && piece.type !== PIECETYPES.KING && !checkPreveting) {
@@ -550,6 +494,61 @@ export class BoardComponent implements OnInit {
       legalMoves = legalMoves.filter((t) => {
         return checkDefendingMoves.includes(t);
       });
+    }
+
+    // check prevented moves - throwing out non-king moves that endanger the king
+    if (piece.type !== PIECETYPES.KING && !checkPreveting) {
+
+      let kingTile = this.findTileById(this.playerTurnColor | PIECETYPES.KING);
+      let potencialKingAttackers = this.findPotencialAttackers(kingTile!).filter((t) => {
+        return t.piece!.type === PIECETYPES.BISHOP || t.piece!.type === PIECETYPES.ROOK || t.piece!.type === PIECETYPES.QUEEN;
+      });
+
+      for (let potencialKingAttacker of potencialKingAttackers) {
+
+        let potencialKingAttackerMoves = this.getQueenMoveSetTilesFromOriginToKing(potencialKingAttacker);
+    
+        let kx = kingTile!.x;
+        let ky = kingTile!.y;
+
+        // reduce potencialKingAttackerMoves to only the portion that is directing the king in check
+        if (potencialKingAttacker.piece!.type === PIECETYPES.ROOK || potencialKingAttacker.piece!.type === PIECETYPES.QUEEN) {
+          if (potencialKingAttacker.x === kx && potencialKingAttacker.y < ky) {
+            potencialKingAttackerMoves = potencialKingAttackerMoves.filter(t => t.x === potencialKingAttacker.x && t.y > potencialKingAttacker.y);
+          } else if (potencialKingAttacker.x === kx && potencialKingAttacker.y > ky) {
+            potencialKingAttackerMoves = potencialKingAttackerMoves.filter(t => t.x === potencialKingAttacker.x && t.y < potencialKingAttacker.y);
+          } else if (potencialKingAttacker.x < kx && potencialKingAttacker.y === ky) {
+            potencialKingAttackerMoves = potencialKingAttackerMoves.filter(t => t.x > potencialKingAttacker.x && t.y === potencialKingAttacker.y);
+          } else if (potencialKingAttacker.x > kx && potencialKingAttacker.y === ky) {
+            potencialKingAttackerMoves = potencialKingAttackerMoves.filter(t => t.x < potencialKingAttacker.x && t.y === potencialKingAttacker.y);
+          }
+        }
+
+        if (potencialKingAttacker.piece!.type === PIECETYPES.BISHOP || potencialKingAttacker.piece!.type === PIECETYPES.QUEEN) {
+          if (potencialKingAttacker.x < kx && potencialKingAttacker.y < ky) {
+            potencialKingAttackerMoves = potencialKingAttackerMoves.filter(t => t.x > potencialKingAttacker.x && t.y > potencialKingAttacker.y);
+          } else if (potencialKingAttacker.x > kx && potencialKingAttacker.y < ky) {
+            potencialKingAttackerMoves = potencialKingAttackerMoves.filter(t => t.x < potencialKingAttacker.x && t.y > potencialKingAttacker.y);
+          } else if (potencialKingAttacker.x > kx && potencialKingAttacker.y > ky) {
+            potencialKingAttackerMoves = potencialKingAttackerMoves.filter(t => t.x < potencialKingAttacker.x && t.y < potencialKingAttacker.y);
+          } else if (potencialKingAttacker.x < kx && potencialKingAttacker.y > ky) {
+            potencialKingAttackerMoves = potencialKingAttackerMoves.filter(t => t.x > potencialKingAttacker.x && t.y < potencialKingAttacker.y);
+          }
+        }
+
+        let kingColorPiecesInBetween = potencialKingAttackerMoves.filter((t) => {
+          return t.piece !== undefined && t.piece.color === this.playerTurnColor && t.piece.type !== PIECETYPES.KING;
+        });
+
+        // if 2 pieces are in between the king and the attacker no matter what move you make king won't be in check
+        if (kingColorPiecesInBetween.length === 1) {
+          if (kingColorPiecesInBetween[0] === tile) { // if selected piece is the one between the king and the attacker
+            legalMoves = legalMoves.filter((t) => {
+              return potencialKingAttackerMoves.includes(t) || t === potencialKingAttacker;
+            })
+          }
+        }
+      }
     }
 
     if (!forKing)
@@ -732,7 +731,7 @@ export class BoardComponent implements OnInit {
     }
   }
 
-  findPotencialAttackers(attackedTile: Tile, phasing: Boolean = false): Tile[] {
+  findPotencialAttackers(attackedTile: Tile): Tile[] {
     let attackedPiece = attackedTile.piece;
 
     if (attackedPiece === undefined)
@@ -746,75 +745,59 @@ export class BoardComponent implements OnInit {
 
     for (let i = 1; i <= Math.min(x, y); i++) {
       let tile = this.getTile(x-i, y-i);
-      if (tile.piece !== undefined) {
-        if (tile.piece.color !== attackedPiece.color)
+      if (tile.piece !== undefined && tile.piece.color !== attackedPiece.color) {
           potencialAttackers.push(tile);
-        if (!phasing)
           break;
       }
     }
     for (let i = 1; i <= Math.min(7 - x, y); i++) {
       let tile = this.getTile(x+i, y-i);
-      if (tile.piece !== undefined) {
-        if (tile.piece.color !== attackedPiece.color)
-          potencialAttackers.push(tile);
-        if (!phasing)
-          break;
+      if (tile.piece !== undefined && tile.piece.color !== attackedPiece.color) {
+        potencialAttackers.push(tile);
+        break;
       }
     }
     for (let i = 1; i <= Math.min(7 - x, 7 - y); i++) {
       let tile = this.getTile(x+i, y+i);
-      if (tile.piece !== undefined) {
-        if (tile.piece.color !== attackedPiece.color)
-          potencialAttackers.push(tile);
-        if (!phasing)
-          break;
+      if (tile.piece !== undefined && tile.piece.color !== attackedPiece.color) {
+        potencialAttackers.push(tile);
+        break;
       }
     }
     for (let i = 1; i <= Math.min(x, 7 - y); i++) {
       let tile = this.getTile(x-i, y+i);
-      if (tile.piece !== undefined) {
-        if (tile.piece.color !== attackedPiece.color)
-          potencialAttackers.push(tile);
-        if (!phasing)
-          break;
+      if (tile.piece !== undefined && tile.piece.color !== attackedPiece.color) {
+        potencialAttackers.push(tile);
+        break;
       }
     }
 
     for (let i = 1; i <= y; i++) {
       let tile = this.getTile(x, y-i);
-      if (tile.piece !== undefined) {
-        if (tile.piece.color !== attackedPiece.color)
-          potencialAttackers.push(tile);
-        if (!phasing)
-          break;
+      if (tile.piece !== undefined && tile.piece.color !== attackedPiece.color) {
+        potencialAttackers.push(tile);
+        break;
       }
     }
     for (let i = 1; i <= 7 - x; i++) {
       let tile = this.getTile(x+i, y);
-      if (tile.piece !== undefined) {
-        if (tile.piece.color !== attackedPiece.color)
-          potencialAttackers.push(tile);
-        if (!phasing)
-          break;
+      if (tile.piece !== undefined && tile.piece.color !== attackedPiece.color) {
+        potencialAttackers.push(tile);
+        break;
       }
     }
     for (let i = 1; i <= 7 - y; i++) {
       let tile = this.getTile(x, y+i);
-      if (tile.piece !== undefined) {
-        if (tile.piece.color !== attackedPiece.color)
-          potencialAttackers.push(tile);
-        if (!phasing)
-          break;
+      if (tile.piece !== undefined && tile.piece.color !== attackedPiece.color) {
+        potencialAttackers.push(tile);
+        break;
       }
     }
     for (let i = 1; i <= x; i++) {
       let tile = this.getTile(x-i, y);
-      if (tile.piece !== undefined) {
-        if (tile.piece.color !== attackedPiece.color)
-          potencialAttackers.push(tile);
-        if (!phasing)
-          break;
+      if (tile.piece !== undefined && tile.piece.color !== attackedPiece.color) {
+        potencialAttackers.push(tile);
+        break;
       }
     }
 
@@ -893,7 +876,7 @@ export class BoardComponent implements OnInit {
     return kingAttackers;
   }
 
-  getQueenMoveSetTilesFromOrigin(origin: Tile) {
+  getQueenMoveSetTilesFromOriginToKing(origin: Tile) {
 
     let moveSetTiles: Tile[] = [];
 
@@ -903,35 +886,43 @@ export class BoardComponent implements OnInit {
     for (let i = 1; i <= Math.min(x, y); i++) {
       let t = this.getTile(x-i, y-i);
       moveSetTiles.push(t);
+      if (t.piece !== undefined && t.piece.type === PIECETYPES.KING) break;
     }
     for (let i = 1; i <= Math.min(7 - x, y); i++) {
       let t = this.getTile(x+i, y-i);
       moveSetTiles.push(t);
+      if (t.piece !== undefined && t.piece.type === PIECETYPES.KING) break;
     }
     for (let i = 1; i <= Math.min(7 - x, 7 - y); i++) {
       let t = this.getTile(x+i, y+i);
       moveSetTiles.push(t);
+      if (t.piece !== undefined && t.piece.type === PIECETYPES.KING) break;
     }
     for (let i = 1; i <= Math.min(x, 7 - y); i++) {
       let t = this.getTile(x-i, y+i);
       moveSetTiles.push(t);
+      if (t.piece !== undefined && t.piece.type === PIECETYPES.KING) break;
     }
 
     for (let i = 1; i <= y; i++) {
       let t = this.getTile(x, y-i);
       moveSetTiles.push(t);
+      if (t.piece !== undefined && t.piece.type === PIECETYPES.KING) break;
     }
     for (let i = 1; i <= 7 - x; i++) {
       let t = this.getTile(x+i, y);
       moveSetTiles.push(t);
+      if (t.piece !== undefined && t.piece.type === PIECETYPES.KING) break;
     }
     for (let i = 1; i <= 7 - y; i++) {
       let t = this.getTile(x, y+i);
       moveSetTiles.push(t);
+      if (t.piece !== undefined && t.piece.type === PIECETYPES.KING) break;
     }
     for (let i = 1; i <= x; i++) {
       let t = this.getTile(x-i, y);
       moveSetTiles.push(t);
+      if (t.piece !== undefined && t.piece.type === PIECETYPES.KING) break;
     }
 
     return moveSetTiles;
