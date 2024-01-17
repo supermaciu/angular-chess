@@ -135,6 +135,8 @@ export class BoardComponent implements OnInit {
     this.getTile(5, 7).setPiece(new Piece(PIECECOLORS.WHITE, PIECETYPES.BISHOP));
     this.getTile(6, 7).setPiece(new Piece(PIECECOLORS.WHITE, PIECETYPES.KNIGHT));
     this.getTile(7, 7).setPiece(new Piece(PIECECOLORS.WHITE, PIECETYPES.ROOK)).castlingable = true;
+
+    this.evaluateAllPiecesLegalMoves();
   }
 
   getTile(x: number, y: number): Tile {
@@ -153,12 +155,12 @@ export class BoardComponent implements OnInit {
     return allTiles;
   }
 
-  getAllPieces(color?: PIECECOLORS): Tile[] {
+  getAllPieces(): Tile[] {
     let allPieces: Tile[] = [];
 
     for (let row of this.board) {
       for (let tile of row) {
-        if (tile.piece !== undefined && (color !== undefined && tile.piece.color === color))
+        if (tile.piece !== undefined)
           allPieces.push(tile);
       }
     }
@@ -190,7 +192,7 @@ export class BoardComponent implements OnInit {
     if (tile.piece === undefined)
       return [];
 
-    if (tile.legalMoves.length !== 0)
+    if (tile.legalMoves.length > 0)
       return tile.legalMoves;
 
     let legalMoves: Tile[] = [];
@@ -437,7 +439,9 @@ export class BoardComponent implements OnInit {
       });
     }
 
-    let kingColorPieces = this.getAllPieces(this.kingChecked);
+    let kingColorPieces = this.getAllPieces().filter((t) => {
+      return t.piece!.color === this.kingChecked;
+    });
 
     // if king is checked, check defending non-king moves - king checked
     if (this.kingChecked !== 0 && piece.type !== PIECETYPES.KING && !checkPreveting) {
@@ -558,9 +562,39 @@ export class BoardComponent implements OnInit {
     return legalMoves;
   }
 
+  evaluateAllPiecesLegalMoves(color?: PIECECOLORS | undefined): number {
+    this.clearAllPiecesLegalMoves()
+    
+    let allChangingMoves: Tile[] = [];
+
+    if (color !== undefined) {
+      this.getAllPieces().filter(t => t.piece!.color === color).forEach(tile => {
+        tile.legalMoves = this.evaluateLegalMoves(tile);
+        allChangingMoves = allChangingMoves.concat(tile.legalMoves.filter(t => t !== tile));
+      });
+    } else {
+      this.getAllPieces().forEach(tile => {
+        tile.legalMoves = this.evaluateLegalMoves(tile);
+        allChangingMoves = allChangingMoves.concat(tile.legalMoves.filter(t => t !== tile));
+      });
+    }
+
+    return allChangingMoves.length;
+  }
+
+  clearAllPiecesLegalMoves() {
+    this.getAllPieces().forEach(tile => {
+      tile.legalMoves = [];
+    });
+  }
+
   selectPiece(clickedTile: Tile) {
     if (this.selectedPiece === undefined && clickedTile.piece !== undefined && clickedTile.piece.color === this.playerTurnColor) {
-      this.selectedPieceLegalTiles = this.evaluateLegalMoves(clickedTile);
+
+      if (clickedTile.legalMoves.length === 0) {
+        clickedTile.legalMoves = this.evaluateLegalMoves(clickedTile);
+      }
+      this.selectedPieceLegalTiles = clickedTile.legalMoves;
 
       if (this.selectedPieceLegalTiles.length <= 1)
         return;
@@ -587,6 +621,8 @@ export class BoardComponent implements OnInit {
       for (let tile of this.selectedPieceLegalTiles) {
         tile.availableMove = false;
       }
+
+      clickedTile.setPiece(this.selectedPiece);
 
       this.promotionTile = clickedTile;
 
@@ -622,12 +658,9 @@ export class BoardComponent implements OnInit {
           if (clickedTile.y == 0 || clickedTile.y == 7) {
             this.promotionModal.show();
 
-            // TODO: need to wait for this function to end for the check evaluation to be done because the pawn can promote to a piece that threatens the king IMPORTANT
             return; // "pausing"
           }
         }
-
-        clickedTile.setPiece(this.selectedPiece);
 
         if (this.selectedPiece.touched === false)
           this.selectedPiece.touched = true;
@@ -647,6 +680,8 @@ export class BoardComponent implements OnInit {
 
         this.previousClickedTile = clickedTile; // for unhighlighting
         this.previousPreviousTile = this.previousTile; // for unhighlighting
+
+        console.log(`${PIECECOLORS[(this.selectedPiece.color)]} ${PIECETYPES[this.selectedPiece.type]} ${this.selectedPieceMove.from} -> ${this.selectedPieceMove.to}`);
 
         // check, testing after changing the player turn, if white made the attacking move then black is in check
         let kingTile;
@@ -669,7 +704,13 @@ export class BoardComponent implements OnInit {
 
           this.kingChecked = this.playerTurnColor;
 
-          //checkmate...
+          let numberOfDefendingCheckMoves = this.evaluateAllPiecesLegalMoves(this.playerTurnColor);
+
+          if (numberOfDefendingCheckMoves === 0) {
+            console.log("CHECKMATE");
+            // TODO: CHECKMATE MODAL
+          }
+          
         } else if (this.previousCheckedKingTile !== undefined) {
           this.kingChecked = 0;
           this.previousCheckedKingTile.unhighlight();
@@ -677,10 +718,9 @@ export class BoardComponent implements OnInit {
           this.kingAttackers = [];
         }
 
-        console.log(`${PIECECOLORS[(this.selectedPiece.color)]} ${PIECETYPES[this.selectedPiece.type]} ${this.selectedPieceMove.from} -> ${this.selectedPieceMove.to}`);
+        this.clearAllPiecesLegalMoves();
       }
 
-      this.selectedPieceLegalTiles.splice(0); // TODO: replace it with loading from tile object?
       this.selectedPiece = undefined;
     }
   }
