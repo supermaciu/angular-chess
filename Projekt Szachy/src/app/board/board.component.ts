@@ -46,6 +46,8 @@ export class BoardComponent implements OnInit {
   mouseLeft!: number;
   mouseTop!: number;
 
+  promotionTile?: Tile | undefined = undefined;
+
   // :The queen is worth 900, 1 queen = 9 pawns
   // :Each rook is worth 500; 
   // :Each knight is worth 300; 
@@ -75,9 +77,6 @@ export class BoardComponent implements OnInit {
   // -agreement from both players
 
   // TO MAKE IT WORK
-  //TODO: wait for promotion modal to be done
-  //TODO: cant make a non king move that endangers the king that is the same color
-
   //TODO: checkmate
   //TODO: draw
   //TODO: fix check highlight - different red shows sometimes
@@ -99,7 +98,6 @@ export class BoardComponent implements OnInit {
   //TODO: simplify Board component's template to feature one function for every element that handles all events
 
   promotionModal: any;
-  promoting: boolean = false;
 
   ngOnInit() {
     this.resetBoard();
@@ -191,6 +189,9 @@ export class BoardComponent implements OnInit {
   evaluateLegalMoves(tile: Tile, forKing: boolean = false, checkPreveting: boolean = false): Tile[] {
     if (tile.piece === undefined)
       return [];
+
+    if (tile.legalMoves.length !== 0)
+      return tile.legalMoves;
 
     let legalMoves: Tile[] = [];
     let piece = tile.piece;
@@ -583,12 +584,11 @@ export class BoardComponent implements OnInit {
 
       if (!this.selectedPieceLegalTiles.includes(clickedTile)) return;
 
-      clickedTile.setPiece(this.selectedPiece);
-
       for (let tile of this.selectedPieceLegalTiles) {
         tile.availableMove = false;
       }
-      this.selectedPieceLegalTiles.splice(0); // TODO: replace it with loading from tile object?
+
+      this.promotionTile = clickedTile;
 
       if (clickedTile !== this.previousTile) { // if the move wasn't undone
         if (this.selectedPiece.type == PIECETYPES.PAWN) {
@@ -623,10 +623,11 @@ export class BoardComponent implements OnInit {
             this.promotionModal.show();
 
             // TODO: need to wait for this function to end for the check evaluation to be done because the pawn can promote to a piece that threatens the king IMPORTANT
-            // this.promoting = true;
-            // return; // "pausing"
+            return; // "pausing"
           }
         }
+
+        clickedTile.setPiece(this.selectedPiece);
 
         if (this.selectedPiece.touched === false)
           this.selectedPiece.touched = true;
@@ -679,6 +680,7 @@ export class BoardComponent implements OnInit {
         console.log(`${PIECECOLORS[(this.selectedPiece.color)]} ${PIECETYPES[this.selectedPiece.type]} ${this.selectedPieceMove.from} -> ${this.selectedPieceMove.to}`);
       }
 
+      this.selectedPieceLegalTiles.splice(0); // TODO: replace it with loading from tile object?
       this.selectedPiece = undefined;
     }
   }
@@ -723,11 +725,9 @@ export class BoardComponent implements OnInit {
 
   promotePiece(tile: Tile | undefined, new_type: PIECETYPES) {
     if (tile !== undefined) {
-      let old_color = tile.piece!.color;
-
-      tile.erasePiece();
-
-      tile.setPiece(new Piece(old_color, new_type));
+      let old_color = this.selectedPiece!.color;
+      this.selectedPiece = new Piece(old_color, new_type);
+      this.placeSelectedPiece(this.promotionTile!);
     }
   }
 
