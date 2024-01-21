@@ -1,5 +1,5 @@
 <div class="boardContainer container-fluid p-3 d-flex justify-content-center align-items-center" (dragstart)="noDrag($event)">
-    <p class="playerTurn">Tura {{playerTurnColor == 8 ? "białych" : "czarnych"}}</p>
+    <p class="playerTurn" [class.hidden]="playerTurnDisplayHidden">Tura {{playerTurnColor == 8 ? "białych" : "czarnych"}}</p>
     <div class="boardLayout" [class.grabbing]="selectedPiece">
         <table class="board" (mousemove)="getMouseCoordinates($event)">
             <tr>
@@ -31,7 +31,7 @@
             <img class="selectedPiece" *ngIf="selectedPiece" src="{{selectedPiece.getUrl()}}" [style.left.px]="mouseLeft" [style.top.px]="mouseTop">
         </table>
     </div>
-    <p class="playerTurn">Tura {{playerTurnColor == 8 ? "białych" : "czarnych"}}</p>
+    <p class="playerTurn" [class.hidden]="playerTurnDisplayHidden">Tura {{playerTurnColor == 8 ? "białych" : "czarnych"}}</p>
 
     <div class="modal fade" id="promotionModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
@@ -52,6 +52,19 @@
                 <button type="button" class="btn m-2" data-bs-dismiss="modal" (click)="promotePiece(previousClickedTile, PIECETYPESTEMPLATE.QUEEN)">
                     <img src="{{playerTurnColor == 8 ? '../../assets/pieces/queen-white.svg' : '../../assets/pieces/queen-black.svg'}}">
                 </button>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="checkmateModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Szach mat</h3>
+            </div>
+            <div class="modal-body mx-auto d-flex">
+                <h1 class="display-5">Wygrał kolor {{playerTurnColor == 8 ? "czarny" : "biały"}}</h1>
             </div>
         </div>
         </div>

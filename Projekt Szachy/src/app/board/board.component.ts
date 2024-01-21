@@ -23,44 +23,46 @@ export class BoardComponent implements OnInit {
     )
   );
 
+  // TURN CONTROL
   playerTurnColor: number = 0b01000;
+  playerTurnDisplayHidden: boolean = false;
 
+  // TILE MOVES LOG
   moves: Move[] = [];
 
+  // SELECTED PIECE
+  selectedPieceLegalTiles: Tile[] = [];
   selectedPiece?: Piece | undefined = undefined;
   selectedPieceMove: Move = {
     from: "",
     to: ""
   };
 
+  // CONTROL TILES
   previousTile?: Tile | undefined = undefined;
   previousClickedTile?: Tile | undefined = undefined;
   previousPreviousTile?: Tile | undefined = undefined;
-
-  selectedPieceLegalTiles: Tile[] = [];
 
   kingAttackers: Tile[] = [];
   kingChecked: number = 0; // 0b01000 - white king checked, 0b10000 - black king checked
   previousCheckedKingTile?: Tile | undefined = undefined;
 
+  promotionTile?: Tile | undefined = undefined;
+
+  // MOUSE TARGETING
   mouseLeft!: number;
   mouseTop!: number;
 
-  promotionTile?: Tile | undefined = undefined;
+
+  // MODALS
+  promotionModal: any;
+  checkmateModal: any;
 
   // :The queen is worth 900, 1 queen = 9 pawns
   // :Each rook is worth 500; 
   // :Each knight is worth 300; 
   // :Each bishop is worth 300; 
   // :Each pawn is worth 100 centipawns.
-
-  // WIN/LOSE:
-  // Checkmate-------------------------------------------------------
-  // One of the most common ways to end a chess game is by checkmate. This happens when one of the players
-  // is threatening the other king and it cannot move to any other squares, cannot be protected by another 
-  // piece and the checking piece cannot be captured.
-
-  // If all of these conditions are met, the attacking player wins via checkmate.
 
   // Resignation-----------------------------------
 
@@ -77,17 +79,14 @@ export class BoardComponent implements OnInit {
   // -agreement from both players
 
   // TO MAKE IT WORK
-  //TODO: checkmate
   //TODO: draw
   //TODO: fix check highlight - different red shows sometimes
   //TODO: make hover highlight to see where you place the piece
   //TODO: dynamic tile sizing
 
   // LATER TODOS
-  //TODO: evaluation not on piece select
   //TODO: count pieces' values to see who's ahead
   //TODO: make grabbing hand show only on grabable pieces
-  //TODO: dynamic evaluation
   //TODO: animation
   //TODO: sounds
   //TODO: optimisations
@@ -97,12 +96,11 @@ export class BoardComponent implements OnInit {
   //TODO: make everything more structural
   //TODO: simplify Board component's template to feature one function for every element that handles all events
 
-  promotionModal: any;
-
   ngOnInit() {
     this.resetBoard();
 
     this.promotionModal = new window.bootstrap.Modal(document.getElementById("promotionModal"));
+    this.checkmateModal = new window.bootstrap.Modal(document.getElementById("checkmateModal"));
   }
 
   noDrag(event: Event) {
@@ -136,6 +134,7 @@ export class BoardComponent implements OnInit {
     this.getTile(6, 7).setPiece(new Piece(PIECECOLORS.WHITE, PIECETYPES.KNIGHT));
     this.getTile(7, 7).setPiece(new Piece(PIECECOLORS.WHITE, PIECETYPES.ROOK)).castlingable = true;
 
+    // INITIAL LEGAL MOVES EVALUATION FOR ALL PIECES
     this.evaluateAllPiecesLegalMoves();
   }
 
@@ -555,7 +554,7 @@ export class BoardComponent implements OnInit {
         }
       }
     }
-
+    
     if (!forKing)
       legalMoves.push(tile); // origin
 
@@ -683,6 +682,8 @@ export class BoardComponent implements OnInit {
 
         console.log(`${PIECECOLORS[(this.selectedPiece.color)]} ${PIECETYPES[this.selectedPiece.type]} ${this.selectedPieceMove.from} -> ${this.selectedPieceMove.to}`);
 
+        this.clearAllPiecesLegalMoves();
+
         // check, testing after changing the player turn, if white made the attacking move then black is in check
         let kingTile;
         if (this.selectedPiece.type === PIECETYPES.KING) {
@@ -706,9 +707,10 @@ export class BoardComponent implements OnInit {
 
           let numberOfDefendingCheckMoves = this.evaluateAllPiecesLegalMoves(this.playerTurnColor);
 
+          // checkmate
           if (numberOfDefendingCheckMoves === 0) {
-            console.log("CHECKMATE");
-            // TODO: CHECKMATE MODAL
+            this.playerTurnDisplayHidden = true;
+            this.checkmateModal.show();
           }
           
         } else if (this.previousCheckedKingTile !== undefined) {
@@ -717,8 +719,6 @@ export class BoardComponent implements OnInit {
           this.previousCheckedKingTile = undefined;
           this.kingAttackers = [];
         }
-
-        this.clearAllPiecesLegalMoves();
       }
 
       this.selectedPiece = undefined;
@@ -767,6 +767,7 @@ export class BoardComponent implements OnInit {
     if (tile !== undefined) {
       let old_color = this.selectedPiece!.color;
       this.selectedPiece = new Piece(old_color, new_type);
+      // return to pause - continue placing the promoted piece
       this.placeSelectedPiece(this.promotionTile!);
     }
   }
