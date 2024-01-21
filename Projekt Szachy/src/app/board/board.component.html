@@ -63,8 +63,9 @@
             <div class="modal-header">
                 <h3 class="modal-title">Szach mat</h3>
             </div>
-            <div class="modal-body mx-auto d-flex">
+            <div class="modal-body mx-auto d-flex flex-column">
                 <h1 class="display-5">Wygrał kolor {{playerTurnColor == 8 ? "czarny" : "biały"}}</h1>
+                <button class="btn btn-success m-2" (click)="reloadPage()">Zagraj ponownie</button>
             </div>
         </div>
         </div>

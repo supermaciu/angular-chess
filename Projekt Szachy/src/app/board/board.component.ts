@@ -53,7 +53,6 @@ export class BoardComponent implements OnInit {
   mouseLeft!: number;
   mouseTop!: number;
 
-
   // MODALS
   promotionModal: any;
   checkmateModal: any;
@@ -554,7 +553,7 @@ export class BoardComponent implements OnInit {
         }
       }
     }
-    
+
     if (!forKing)
       legalMoves.push(tile); // origin
 
@@ -967,5 +966,9 @@ export class BoardComponent implements OnInit {
     }
 
     return moveSetTiles;
+  }
+
+  reloadPage() {
+    window.location.reload();
   }
 }
