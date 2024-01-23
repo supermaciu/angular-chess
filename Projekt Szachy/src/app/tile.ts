@@ -20,10 +20,9 @@ export class Tile {
 
     availableMove: boolean = false;
 
+    highlighted: boolean = false;
     static defaultHighlightColor: string = "yellow";
     highlightColor: string =  Tile.defaultHighlightColor;
-    highlighted: boolean = false;
-
     legalMoves: Tile[] = [];
 
     constructor(x: number, y: number) {

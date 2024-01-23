@@ -56,29 +56,11 @@ export class BoardComponent implements OnInit {
   // MODALS
   promotionModal: any;
   checkmateModal: any;
-
-  // :The queen is worth 900, 1 queen = 9 pawns
-  // :Each rook is worth 500; 
-  // :Each knight is worth 300; 
-  // :Each bishop is worth 300; 
-  // :Each pawn is worth 100 centipawns.
-
-  // Resignation-----------------------------------
+  tieModal: any;
 
   // Timeout (timer implementation) -------------------------------
 
-  // DRAW:
-  // Stalemate-----------------
-  // -king is not in check and there are no other pieces on the board
-  // -https://www.chess.com/article/view/stalemate-chess
-  // -Insufficient material
-  // -https://www.chess.com/article/view/how-chess-games-can-end-8-ways-explained
-  // -50 move rule - The 50 move-rule allows either player to claim a draw if no capture has been made or no pawn has been moved in the last 50 moves.
-  // -repetition - The threefold-repetition rule says that if a position arises three times in a game, either player can claim a draw during that position
-  // -agreement from both players
-
   // TO MAKE IT WORK
-  //TODO: draw
   //TODO: fix check highlight - different red shows sometimes
   //TODO: make hover highlight to see where you place the piece
   //TODO: dynamic tile sizing
@@ -95,11 +77,14 @@ export class BoardComponent implements OnInit {
   //TODO: make everything more structural
   //TODO: simplify Board component's template to feature one function for every element that handles all events
 
+  //TODO: make it online -> add resignation for two sides 
+
   ngOnInit() {
     this.resetBoard();
 
     this.promotionModal = new window.bootstrap.Modal(document.getElementById("promotionModal"));
     this.checkmateModal = new window.bootstrap.Modal(document.getElementById("checkmateModal"));
+    this.tieModal = new window.bootstrap.Modal(document.getElementById("tieModal"));
   }
 
   noDrag(event: Event) {
@@ -691,20 +676,41 @@ export class BoardComponent implements OnInit {
           kingTile = this.findTileById(this.playerTurnColor | PIECETYPES.KING);
         }
         
-        this.kingAttackers = this.findKingAttackers(kingTile!); // there always should be a king on the board
+        // get all king attackers' tiles
+        this.kingAttackers = this.findKingAttackers(kingTile!);
 
-        // king in check
+        // get the number of all possible moves
+        let numberOfDefendingCheckMoves = this.evaluateAllPiecesLegalMoves(this.playerTurnColor);
+
+        // threefold repetition rule - if a move was repeated 3 times the game draws
+        if (this.moves.length >= 12) {
+          let sub1 = this.moves.slice(0, 4);
+          let sub2 = this.moves.slice(4, 8);
+          let sub3 = this.moves.slice(8, 12);
+
+          if (JSON.stringify(sub1) == JSON.stringify(sub2) && JSON.stringify(sub2) == JSON.stringify(sub3)) {
+            this.playerTurnDisplayHidden = true;
+            this.tieModal.show();
+          }
+        }
+
+        // check if it's stalemate or pat
+        if (this.kingAttackers.length === 0 && numberOfDefendingCheckMoves === 0) {
+          this.playerTurnDisplayHidden = true;
+          this.tieModal.show();
+        }
+
+        // check if a king in check
         if (this.kingAttackers.length > 0) {
           console.log(PIECECOLORS[kingTile!.piece!.color] + " KING in check");
 
-          kingTile!.highlightColor = "red"; // telling the compiler that kingTile always will be found because it SHOULD always be on the board
+          kingTile!.highlightColor = "red";
           kingTile!.highlight();
-
+          
           this.previousCheckedKingTile = kingTile;
-
           this.kingChecked = this.playerTurnColor;
 
-          let numberOfDefendingCheckMoves = this.evaluateAllPiecesLegalMoves(this.playerTurnColor);
+          numberOfDefendingCheckMoves = this.evaluateAllPiecesLegalMoves(this.playerTurnColor); // TODO: called again
 
           // checkmate
           if (numberOfDefendingCheckMoves === 0) {
@@ -718,6 +724,8 @@ export class BoardComponent implements OnInit {
           this.previousCheckedKingTile = undefined;
           this.kingAttackers = [];
         }
+
+        this.clearAllPiecesLegalMoves();
       }
 
       this.selectedPiece = undefined;
