@@ -41,6 +41,6 @@ export class Piece {
     }
 
     getUrl() {
-        return `../assets/pieces/${PIECETYPESSTRING[this.type]}-${PIECECOLORSSTRING[this.color]}.svg`;
+        return `assets/pieces/${PIECETYPESSTRING[this.type]}-${PIECECOLORSSTRING[this.color]}.svg`;
     }
 }
