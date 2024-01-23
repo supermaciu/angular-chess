@@ -7,6 +7,14 @@ import * as bootstrap from 'bootstrap';
 
 declare var window: any; // for displaying bootstrap modals
 
+// checksum draw conditions
+enum DRAWCONDITIONS {
+  // two kings and two bishops
+  K2B2 = PIECECOLORS.WHITE + PIECETYPES.KING + PIECECOLORS.WHITE + PIECETYPES.BISHOP + PIECECOLORS.BLACK + PIECETYPES.KING + PIECECOLORS.BLACK + PIECETYPES.BISHOP,
+  // two kings and two knights
+  K2K2 = PIECECOLORS.WHITE + PIECETYPES.KING + PIECECOLORS.WHITE + PIECETYPES.KNIGHT + PIECECOLORS.BLACK + PIECETYPES.KING + PIECECOLORS.BLACK + PIECETYPES.KNIGHT
+}
+
 @Component({
   selector: 'app-board',
   templateUrl: './board.component.html',
@@ -151,6 +159,19 @@ export class BoardComponent implements OnInit {
     return allPieces;
   }
 
+  countAllPieces(): number {
+    let count = 0;
+
+    for (let row of this.board) {
+      for (let tile of row) {
+        if (tile.piece !== undefined)
+          count++;
+      }
+    }
+
+    return count;
+  }
+
   setTile(x: number, y: number, tile: Tile) {
     this.board[y][x] = tile;
   }
@@ -206,7 +227,7 @@ export class BoardComponent implements OnInit {
           legalMoves.push(this.getTile(tile.x+1, tile.y+delta));
         }
     
-        // // en passant
+        // en passant
         if (tile.x-1 >= 0 && tile.y+delta >= 0 && tile.y+delta <= 7 && this.getTile(tile.x-1, tile.y+delta).piece === undefined && this.getTile(tile.x-1, tile.y).piece !== undefined && this.getTile(tile.x-1, tile.y).piece!.color != piece.color && this.getTile(tile.x-1, tile.y).piece!.enpassantable == true) {
           legalMoves.push(this.getTile(tile.x-1, tile.y+delta));
         } 
@@ -681,6 +702,24 @@ export class BoardComponent implements OnInit {
 
         // get the number of all possible moves
         let numberOfDefendingCheckMoves = this.evaluateAllPiecesLegalMoves(this.playerTurnColor);
+
+        // The insufficient mating material rule says that the game is immediately declared a draw if there is no way to end the game in checkmate.
+        // insufficient material conditions:
+        // two kings
+        if (this.countAllPieces() === 2) {
+          this.playerTurnDisplayHidden = true;
+          this.tieModal.show();
+        } else if (this.countAllPieces() === 4) {
+          let piecesChecksum = 0;
+          this.getAllPieces().forEach((t) => {
+            piecesChecksum += t.piece!.id;
+          });
+
+          if (piecesChecksum === DRAWCONDITIONS.K2B2 || piecesChecksum === DRAWCONDITIONS.K2K2) {
+            this.playerTurnDisplayHidden = true;
+            this.tieModal.show();
+          }
+        }
 
         // threefold repetition rule - if a move was repeated 3 times the game draws
         if (this.moves.length >= 12) {
