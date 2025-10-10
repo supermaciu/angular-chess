@@ -700,15 +700,13 @@ export class BoardComponent implements OnInit {
         // get all king attackers' tiles
         this.kingAttackers = this.findKingAttackers(kingTile!);
 
-        // get the number of all possible moves
-        let numberOfDefendingCheckMoves = this.evaluateAllPiecesLegalMoves(this.playerTurnColor);
-
         // The insufficient mating material rule says that the game is immediately declared a draw if there is no way to end the game in checkmate.
         // insufficient material conditions:
         // two kings
         if (this.countAllPieces() === 2) {
           this.playerTurnDisplayHidden = true;
           this.tieModal.show();
+          return;
         } else if (this.countAllPieces() === 4) {
           let piecesChecksum = 0;
           this.getAllPieces().forEach((t) => {
@@ -718,6 +716,7 @@ export class BoardComponent implements OnInit {
           if (piecesChecksum === DRAWCONDITIONS.K2B2 || piecesChecksum === DRAWCONDITIONS.K2K2) {
             this.playerTurnDisplayHidden = true;
             this.tieModal.show();
+            return;
           }
         }
 
@@ -730,13 +729,8 @@ export class BoardComponent implements OnInit {
           if (JSON.stringify(sub1) == JSON.stringify(sub2) && JSON.stringify(sub2) == JSON.stringify(sub3)) {
             this.playerTurnDisplayHidden = true;
             this.tieModal.show();
+            return;
           }
-        }
-
-        // check if it's stalemate or pat
-        if (this.kingAttackers.length === 0 && numberOfDefendingCheckMoves === 0) {
-          this.playerTurnDisplayHidden = true;
-          this.tieModal.show();
         }
 
         // check if a king in check
@@ -749,12 +743,14 @@ export class BoardComponent implements OnInit {
           this.previousCheckedKingTile = kingTile;
           this.kingChecked = this.playerTurnColor;
 
-          numberOfDefendingCheckMoves = this.evaluateAllPiecesLegalMoves(this.playerTurnColor); // TODO: called again
+          // get the number of all possible moves for the player in check
+          let numberOfDefendingCheckMoves = this.evaluateAllPiecesLegalMoves(this.playerTurnColor);
 
           // checkmate
           if (numberOfDefendingCheckMoves === 0) {
             this.playerTurnDisplayHidden = true;
             this.checkmateModal.show();
+            return;
           }
           
         } else if (this.previousCheckedKingTile !== undefined) {
@@ -762,6 +758,14 @@ export class BoardComponent implements OnInit {
           this.previousCheckedKingTile.unhighlight();
           this.previousCheckedKingTile = undefined;
           this.kingAttackers = [];
+        }
+
+        // Check for stalemate - only if the current player (who is about to move) has no legal moves and is not in check
+        let numberOfCurrentPlayerMoves = this.evaluateAllPiecesLegalMoves(this.playerTurnColor);
+        if (this.kingAttackers.length === 0 && numberOfCurrentPlayerMoves === 0) {
+          this.playerTurnDisplayHidden = true;
+          this.tieModal.show();
+          return;
         }
 
         this.clearAllPiecesLegalMoves();
